@@ -1,0 +1,39 @@
+{
+  "language": "pl",
+  "generatorForm": {
+    "copy": "kopiuj",
+    "reset": "wyczyść",
+    "outputPlaceholder": "Wymagane pola zostały niewypełnione",
+    "lowercaseSwitch": "Wymuś małe litery",
+    "error" : {
+      "empty": "Brak wartości",
+      "pattern": "Błędna wartość"
+    },
+    "field": {
+      "url": {
+        "label": "Link",
+        "placeholder": "Link do strony (np. https://www.example.com)"
+      },
+       "campaign": {
+        "label": "Kampania",
+        "placeholder": "Nazwa promocji / kampanii (np. BlackFriday)"
+      },
+       "source": {
+        "label": "Źródło",
+        "placeholder": "Pochodzenie ruchu (np. Google)"
+      },
+       "medium": {
+        "label": "Medium",
+        "placeholder": "Nośnik reklamowy (np. Banner)"
+      },
+       "term": {
+        "label": "Fraza",
+        "placeholder": "Szukana fraza (np. Pendrive)"
+      },
+       "content": {
+        "label": "Kontent",
+        "placeholder": "Element, który przekierował użytkownika na stronę (e.g. PromoLogo)"
+      }
+    }
+  }
+}

@@ -1,30 +1,35 @@
-import React from 'react'
+import React, { ChangeEvent } from 'react'
 
 import styled, { CSSObject } from 'styled-components'
+import { ITranslationObj, IGeneratorField, IErrorLabel } from 'UtmGenerator'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
 
 import { Button, Form, FormGroup, FormInput, FormCheckbox, FormTextarea } from 'shards-react'
+import languageService from 'Service/Language'
 import { theme } from 'Theme'
 
 interface IUTMOptionConfig {
-    label: string
-    placeholder?: string
-    name: string
+    name: IGeneratorField
     required?: boolean
 }
 
-interface IFieldValidation {
-    [ inputName: string ]: string
+type IFieldValidation = {
+    [inputName in IGeneratorField]: IErrorLabel
 }
 
 interface IState {
+    translations: ITranslationObj
     outputURL: string
     formOptions: {
         forceLowerCaseOutput: boolean
     }
     fieldsValidation: IFieldValidation
+}
+
+interface IProps {
+
 }
 
 const UTMForm = styled(Form)({
@@ -110,53 +115,50 @@ const ValidationErrorContainer = styled.div({
     color: '#ef5350',
     marginTop: '.5em',
     '&::first-letter': {
-        textTransform: 'uppercase'
-    }
+        textTransform: 'uppercase',
+    },
 })
 
-export default class UTMGenerator extends React.Component<{}, IState> {
+export default class UTMGenerator extends React.Component<IProps, IState> {
     protected readonly urlRegex = /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/ // protected for tests only
     private readonly copyURLRef: React.RefObject<HTMLInputElement> = React.createRef()
     private readonly outputRef: React.RefObject<HTMLInputElement> = React.createRef()
     private readonly attributeFieldRegex = /(^(?![\s\S])|[^$&+,/:;=?@ "'<>#%{}|\\^~[\]`.]+)/
-    private readonly generatorOptionsConfiguration = [
+    private readonly generatorOptionsConfiguration: IUTMOptionConfig[] = [
         {
-            label: 'URL',
             name: 'url',
             required: true,
-            placeholder: 'The full website URL (e.g. https://www.example.com)',
         },
         {
-            label: 'Campaign',
             name: 'campaign',
             required: true,
-            placeholder: 'Name of promotion / campaign (e.g. BlackFriday)',
         },
         {
-            label: 'Source',
             name: 'source',
             required: true,
-            placeholder: 'Traffic source (eg. Google)',
         },
         {
-            label: 'Medium',
             name: 'medium',
             required: true,
-            placeholder: 'Advertising medium (eg. Banner)',
         },
         {
-            label: 'Term',
             name: 'term',
-            placeholder: 'Searched item (eg Pendrive)',
         },
         {
-            label: 'Content',
             name: 'content',
-            placeholder: 'Element which redirected user to site (e.g. PromoLogo)',
         },
     ]
 
+    public componentDidMount() {
+        languageService.store.subscribe((): void => {
+            this.setState({
+                translations: languageService.store.getState() as ITranslationObj,
+            })
+        })
+    }
+
     public state = {
+        translations: languageService.store.getState() as ITranslationObj,
         fieldsValidation: {} as IFieldValidation,
         outputURL: '',
         formOptions: {
@@ -212,12 +214,16 @@ export default class UTMGenerator extends React.Component<{}, IState> {
         }
     }
 
-    private lowercaseSwitchHandler = (): void => {
+    private lowercaseSwitchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
         this.setState((prevState) => ( {
             formOptions: {
                 forceLowerCaseOutput: !prevState.formOptions.forceLowerCaseOutput,
             },
         } ))
+
+        if (event.target && ( event.target as HTMLElement ).nodeName.toLowerCase() === 'label') { // label click does not trigger form change event
+            this.updateOutputURL()
+        }
     }
 
     private copyOutputToClipboard = () => {
@@ -248,22 +254,27 @@ export default class UTMGenerator extends React.Component<{}, IState> {
     private validateInput = (event: React.FocusEvent<HTMLInputElement>): void => {
         const targetInput = event.target
         const inputValue = targetInput.value
-        const inputName = targetInput.name
-        let validationMessage = 'validated'
+        const inputName = targetInput.name as IGeneratorField
+        let validationErrorLabel: IErrorLabel | undefined
 
         if (targetInput.required && !inputValue.length) {
-            validationMessage = 'cannot be empty'
+            validationErrorLabel = 'empty'
         } else if (targetInput.pattern.length && !new RegExp(targetInput.pattern).test(inputValue)) {
-            validationMessage = 'bad input value'
+            validationErrorLabel = 'pattern'
         }
 
-        if (this.state.fieldsValidation[ inputName ] !== validationMessage) { // If new validation data
-            this.setState((prevState) => ( {
-                fieldsValidation: {
-                    ...prevState.fieldsValidation,
-                    [ inputName ]: validationMessage,
-                },
-            } ))
+        if (this.state.fieldsValidation[ inputName ] !== validationErrorLabel) { // Update if label differs
+            this.setState((prevState) => {
+                const stateCopy = { ...prevState }
+
+                if (validationErrorLabel) { // Update state with new label
+                    stateCopy.fieldsValidation[ inputName ] = validationErrorLabel
+                } else { // Remove label missing
+                    delete stateCopy.fieldsValidation[ inputName ]
+                }
+
+                return stateCopy
+            })
         }
     }
 
@@ -273,19 +284,18 @@ export default class UTMGenerator extends React.Component<{}, IState> {
 
                 {
                     this.generatorOptionsConfiguration.map((optionConfig, index) => {
-                        const validationMessage = this.state.fieldsValidation[ optionConfig.name ]
-                        const isValid = !validationMessage || validationMessage === 'validated'
-
-                        console.log(validationMessage)
+                        const validationMessageLabel = this.state.fieldsValidation[ optionConfig.name ]
+                        const isValid = !validationMessageLabel
+                        const translations = this.state.translations.generatorForm.field[ optionConfig.name ]
 
                         return (
-                            <FormGroup key={ String(index) + optionConfig.label }>
+                            <FormGroup key={ String(index) + optionConfig.name }>
                                 <UTMLabel required={ optionConfig.required }
-                                          htmlFor={ 'utm-link-' + optionConfig.label.toLocaleLowerCase() }>
-                                    { optionConfig.label }
+                                          htmlFor={ 'utm-link-' + translations.label.toLocaleLowerCase() }>
+                                    { translations.label }
                                 </UTMLabel>
 
-                                <ParamInput placeholder={ optionConfig.placeholder }
+                                <ParamInput placeholder={ translations.placeholder }
                                             name={ optionConfig.name }
                                             onBlur={ this.validateInput }
                                             pattern={ this.getInputRegex(optionConfig.name) }
@@ -294,7 +304,7 @@ export default class UTMGenerator extends React.Component<{}, IState> {
                                             data-param={ optionConfig.name !== 'url' }
                                             id={ 'utm-link-' + optionConfig.name }/>
                                 { !isValid && <ValidationErrorContainer>
-                                    { validationMessage }
+                                    { this.state.translations.generatorForm.error[ validationMessageLabel ] }
                                 </ValidationErrorContainer> }
                             </FormGroup>
                         )
@@ -307,19 +317,21 @@ export default class UTMGenerator extends React.Component<{}, IState> {
                     <CopyHelperInput value={ this.state.outputURL } ref={ this.copyURLRef } readOnly/>
                     <OutputInput value={ this.state.outputURL } innerRef={ this.outputRef } readOnly disabled required
                                  id="utm-output"
-                                 placeholder="Please, fill in fields above"/>
+                                 placeholder={ this.state.translations.generatorForm.outputPlaceholder }/>
                 </OutputFormGroup>
 
                 <UTMCompileOptionContainer>
                     <FormCheckbox checked={ this.state.formOptions.forceLowerCaseOutput }
                                   onChange={ this.lowercaseSwitchHandler } id="utm-lower-case" toggle
                                   small/>
-                    <UTMLabel htmlFor="utm-lower-case">Lower case link</UTMLabel>
+                    <UTMLabel
+                        htmlFor="utm-lower-case">{ this.state.translations.generatorForm.lowercaseSwitch }</UTMLabel>
 
                     <FormUtils>
-                        <UTMResetButton pill type="reset">Reset</UTMResetButton>
+                        <UTMResetButton pill
+                                        type="reset">{ this.state.translations.generatorForm.reset }</UTMResetButton>
                         <CopyOutputBtn type="button" theme="warning" pill onClick={ this.copyOutputToClipboard }>
-                            Copy
+                            { this.state.translations.generatorForm.copy }
                             <FontAwesomeIcon icon={ faCopy }/>
                         </CopyOutputBtn>
                     </FormUtils>

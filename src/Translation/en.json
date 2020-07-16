@@ -1,0 +1,39 @@
+{
+  "language": "en",
+  "generatorForm": {
+    "copy": "copy",
+    "reset": "reset",
+    "outputPlaceholder": "Please, fill in fields above",
+    "lowercaseSwitch": "Force lowercase output",
+    "error" : {
+      "empty": "cannot be empty",
+      "pattern": "Pattern error"
+    },
+    "field": {
+      "url": {
+        "label": "URL",
+        "placeholder": "The full website URL (e.g. https://www.example.com)"
+      },
+      "campaign": {
+        "label": "Campaign",
+        "placeholder": "Name of promotion / campaign (e.g. BlackFriday)"
+      },
+      "source": {
+        "label": "Source",
+        "placeholder": "Traffic source (eg. Google)"
+      },
+      "medium": {
+        "label": "Medium",
+        "placeholder": "Advertising medium (eg. Banner)"
+      },
+      "term": {
+        "label": "Term",
+        "placeholder": "Searched item (eg Pendrive)"
+      },
+      "content": {
+        "label": "Content",
+        "placeholder": "Element which redirected user to site (e.g. PromoLogo)"
+      }
+    }
+  }
+}

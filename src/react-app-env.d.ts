@@ -63,84 +63,135 @@ declare module '*.module.sass' {
     export default classes
 }
 
+declare module 'UtmGenerator' {
+
+    /* Form fields names */
+    type IGeneratorField = 'url' | 'campaign' | 'source' | 'medium' | 'term' | 'content'
+
+    /* Translation error labels */
+    type IErrorLabel = 'empty' | 'pattern'
+
+    interface ITranslationObj {
+        language: string
+        generatorForm: {
+            copy: string
+            reset: string
+            lowercaseSwitch: string
+            outputPlaceholder: string
+            error: {
+                [key in IErrorLabel]: string
+            }
+            field: {
+                [key in IGeneratorField]: {
+                    label: string
+                    placeholder: string
+                }
+            }
+        }
+    }
+}
+
 declare module 'shards-react' {
-    import React from 'react'
+    import React, { RefObject } from 'react'
 
     type ISize  = 'sm' | 'lg'
+    type ITheme = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark'
 
-    interface IFormProps extends React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> {
-        inline?: boolean,
+    interface IFormProps {
+        inline: boolean,
     }
 
-    interface IFormGroupProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
-        row?: boolean,
-        check?: boolean,
-        inline?: boolean,
-        disabled?: boolean,
+    interface IFormGroupProps {
+        row: boolean,
+        check: boolean,
+        inline: boolean,
+        disabled: boolean,
     }
 
-    interface IFormSelect extends React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement> {
-        size?: ISize
-        valid?: boolean
-        invalid?: boolean
+    interface IFormSelect {
+        size: ISize
+        valid: boolean
+        invalid: boolean
     }
 
-    interface IFormInput extends React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> {
-        inline?: boolean,
-        plaintext?: boolean,
-        type?: 'password' | 'email' | 'number' | 'url' | 'tel' | 'search' | 'date' | 'datetime' | 'datetime-local' | 'month' | 'week' | 'time'
-        size?: string
-        valid?: boolean
-        invalid?: boolean
-        innerRef?: RefObject | string
+    interface IFormInput {
+        inline: boolean,
+        plaintext: boolean,
+        type: 'password' | 'email' | 'number' | 'url' | 'tel' | 'search' | 'date' | 'datetime' | 'datetime-local' | 'month' | 'week' | 'time'
+        size: string
+        valid: boolean
+        invalid: boolean
+        innerRef: RefObject | string
     }
 
-    interface IFormCheckbox extends React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> {
-        inline?: boolean
-        valid?: boolean
-        invalid?: boolean
-        toggle?: boolean
-        small?: boolean
-        onChange?: (...args: any[]) => void
+    interface IFormCheckbox  {
+        inline: boolean
+        valid: boolean
+        invalid: boolean
+        toggle: boolean
+        small: boolean
+        onChange: (...args: any[]) => void
     }
 
-    interface IButton extends React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> {
-        theme?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark'
-        size?: ISize
-        outline?: boolean
-        pill?: boolean
-        squared?: boolean
-        active?: boolean
-        block?: boolean
-        disabled?: boolean
+    interface IButton {
+        theme: ITheme
+        size: ISize
+        outline: boolean
+        pill: boolean
+        squared: boolean
+        active: boolean
+        block: boolean
+        disabled: boolean
     }
 
-    interface IFormTextarea extends React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement> {
-        size?: ISize
-        plaintext?: boolean
-        valid?: boolean
-        invalid?: boolean
-        innerRef?: RefObject | string
+    interface IFormTextarea {
+        size: ISize
+        plaintext: boolean
+        valid: boolean
+        invalid: boolean
+        innerRef: RefObject | string
     }
 
-    export class Form extends React.Component<IFormProps> {
+    interface INavbar {
+        full: boolean
+        fixed: string
+        sticky: string
+        theme: string
+        role: string
+        type: ITheme
+        tag: string
+        expand: boolean | string
     }
 
-    export class FormGroup extends React.Component<IFormGroupProps> {
+    interface INavbarBrand {
+        tag: string
     }
 
-    export class FormSelect extends React.Component<IFormSelect> {
+    interface INav {
+        navbar: boolean
+        horizontal: string
+        tabs: boolean
+        card: boolean
+        pills: boolean
+        justified: boolean
+        fill: boolean
+        vertical: boolean | string
+        tag: string
     }
 
-    export class FormInput extends React.Component<IFormInput> {
-    }
+    /* Basic elements */
+    export class Button extends React.Component<Partial<IButton> & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>> {}
 
-    export class FormCheckbox extends React.Component<IFormCheckbox> {
-    }
+    /* Form */
+    export class Form extends React.Component<Partial<IFormProps> & React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>>{}
+    export class FormInput extends React.Component<Partial<IFormInput> & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>> {}
+    export class FormSelect extends React.Component<Partial<IFormSelect> & React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>> {}
+    export class FormGroup extends React.Component<Partial<IFormGroupProps> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> {}
+    export class FormCheckbox extends React.Component<Partial<IFormCheckbox> & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>> {}
+    export class FormTextarea extends React.Component<Partial<IFormTextarea> & React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>> {}
 
-    export class Button extends React.Component<IButton> {
-    }
-
-    export class FormTextarea extends React.Component<IFormTextarea> {
-    }
+    /* Navigation */
+    export class Nav extends React.Component<Partial<INav> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLUListElement>, HTMLUListElement>> {}
+    export class Navbar extends React.Component<Partial<INavbar> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>> {}
+    export class NavbarBrand extends React.Component<Partial<INavbarBrand> & React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> > {}
 }

@@ -24,6 +24,9 @@
       "Asset/*": ["./Asset/*"],
       "Component/*": ["./Component/*"],
       "Container/*": ["./Container/*"],
+      "Service/*": ["./Service/*"],
+      "Tool/*": ["./Tool/*"],
+      "Translation/*": ["./Translation/*"],
       "Theme": ["./Theme"]
     }
   },

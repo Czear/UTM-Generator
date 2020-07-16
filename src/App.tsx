@@ -9,6 +9,7 @@ import * as serviceWorker from './serviceWorker'
 import styled from 'styled-components'
 
 import UTMGenerator from 'Container/UTM-Generator'
+import Navigation from 'Container/Navigation'
 import { theme } from 'Theme'
 
 const Root = styled.div({
@@ -28,6 +29,7 @@ class App extends React.Component {
     public render() {
         return (
             <Root>
+                <Navigation/>
                 <Container className="container">
                     <UTMGenerator/>
                 </Container>

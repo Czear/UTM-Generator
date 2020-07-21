@@ -195,3 +195,46 @@ declare module 'shards-react' {
     export class Navbar extends React.Component<Partial<INavbar> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>> {}
     export class NavbarBrand extends React.Component<Partial<INavbarBrand> & React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> > {}
 }
+
+
+declare module 'UtmGenerator' {
+    /* Form fields names */
+    type IGeneratorField = 'url' | 'campaign' | 'source' | 'medium' | 'term' | 'content'
+
+    /* Translation error labels */
+    type IErrorLabel = 'empty' | 'pattern'
+}
+
+declare module 'Global' {
+    import UtmGenerator from 'UtmGenerator'
+
+    type IRecursivePartial<T> = {
+        [P in keyof T]?: IRecursivePartial<T[P]>
+    };
+
+    type ITranslationConfig<T> = {
+        [P in keyof T]?: ITranslationConfig<T[P]> | boolean
+    };
+
+    type IGenericObj<T> = { [key: string]: T}
+
+    interface ITranslationObj<T> {
+        language: T
+        headingTitle: T
+        generatorForm: {
+            copy: T
+            reset: T
+            lowercaseSwitch: T
+            outputPlaceholder: T
+            error: {
+                [key in UtmGenerator.IErrorLabel]: T
+            }
+            field: {
+                [key in UtmGenerator.IGeneratorField]: {
+                    label: T
+                    placeholder: T
+                }
+            }
+        }
+    }
+}

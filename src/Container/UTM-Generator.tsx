@@ -1,14 +1,15 @@
 import React, { ChangeEvent } from 'react'
 
 import styled, { CSSObject } from 'styled-components'
-import { ITranslationObj, IGeneratorField, IErrorLabel } from 'UtmGenerator'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
 
-import { Button, Form, FormGroup, FormInput, FormCheckbox, FormTextarea } from 'shards-react'
+import * as IShardsReact from 'shards-react'
 import languageService from 'Service/Language'
 import { theme } from 'Theme'
+import { IRecursivePartial, ITranslationConfig, ITranslationObj } from 'Global'
+import { IErrorLabel, IGeneratorField } from 'UtmGenerator'
 
 interface IUTMOptionConfig {
     name: IGeneratorField
@@ -20,27 +21,27 @@ type IFieldValidation = {
 }
 
 interface IState {
-    translations: ITranslationObj
+    translations: IRecursivePartial<ITranslationObj<string>>
     outputURL: string
+    fieldsValidation: IFieldValidation
     formOptions: {
         forceLowerCaseOutput: boolean
     }
-    fieldsValidation: IFieldValidation
 }
 
 interface IProps {
 
 }
 
-const UTMForm = styled(Form)({
+const UTMForm = styled(IShardsReact.Form)({
     padding: 32,
 })
 
-const OutputFormGroup = styled(FormGroup)({
+const OutputFormGroup = styled(IShardsReact.FormGroup)({
     display: 'flex',
 })
 
-const UTMResetButton = styled(Button)((): CSSObject => {
+const UTMResetButton = styled(IShardsReact.Button)((): CSSObject => {
     const mainColor = theme.cnvBlue
 
     return {
@@ -49,7 +50,7 @@ const UTMResetButton = styled(Button)((): CSSObject => {
     }
 })
 
-const CopyOutputBtn = styled(Button)((): CSSObject => {
+const CopyOutputBtn = styled(IShardsReact.Button)((): CSSObject => {
     const mainColor = theme.cnvOrange
 
     return {
@@ -78,15 +79,16 @@ const UTMLabel = styled.label((props: { required?: boolean }): CSSObject => ( {
     },
 } ))
 
-const UTMCompileOptionContainer = styled(FormGroup)((): CSSObject => ( {
+const UTMCompileOptionContainer = styled(IShardsReact.FormGroup)((): CSSObject => ( {
     alignItems: 'center',
     display: 'flex',
+    flexWrap: 'wrap',
     [ UTMResetButton ]: {
         marginLeft: 'auto',
     },
 } ))
 
-const OutputInput = styled(FormTextarea)({
+const OutputInput = styled(IShardsReact.FormTextarea)({
     cursor: 'text !important',
 })
 
@@ -100,7 +102,7 @@ const CopyHelperInput = styled.input({
     pointerEvents: 'none',
 })
 
-const ParamInput = styled(FormInput)({
+const ParamInput = styled(IShardsReact.FormInput)({
     padding: '.5rem .8rem',
     '&::placeholder': {
         fontSize: '.8em',
@@ -149,16 +151,28 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
         },
     ]
 
+    private readonly translationConfig: ITranslationConfig<ITranslationObj<boolean>> = {
+        generatorForm: {
+            outputPlaceholder: true,
+            lowercaseSwitch: true,
+            reset: true,
+            error: true,
+            copy: true,
+            field: true,
+        },
+    }
+
+
     public componentDidMount() {
         languageService.store.subscribe((): void => {
             this.setState({
-                translations: languageService.store.getState() as ITranslationObj,
+                translations: languageService.getPartialTranslation(this.translationConfig),
             })
         })
     }
 
     public state = {
-        translations: languageService.store.getState() as ITranslationObj,
+        translations: languageService.getPartialTranslation(this.translationConfig),
         fieldsValidation: {} as IFieldValidation,
         outputURL: '',
         formOptions: {
@@ -283,31 +297,37 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
             <UTMForm onReset={ this.resetFormHandler } onChange={ this.updateOutputURL }>
 
                 {
-                    this.generatorOptionsConfiguration.map((optionConfig, index) => {
+                    this.generatorOptionsConfiguration.map((optionConfig, index): JSX.Element | undefined => {
                         const validationMessageLabel = this.state.fieldsValidation[ optionConfig.name ]
                         const isValid = !validationMessageLabel
-                        const translations = this.state.translations.generatorForm.field[ optionConfig.name ]
+                        const formTranslations = this.state.translations.generatorForm
 
-                        return (
-                            <FormGroup key={ String(index) + optionConfig.name }>
-                                <UTMLabel required={ optionConfig.required }
-                                          htmlFor={ 'utm-link-' + translations.label.toLocaleLowerCase() }>
-                                    { translations.label }
-                                </UTMLabel>
+                        if (formTranslations && formTranslations.field && formTranslations.field[ optionConfig.name ]) {
+                            const translations = formTranslations.field[ optionConfig.name ]
 
-                                <ParamInput placeholder={ translations.placeholder }
-                                            name={ optionConfig.name }
-                                            onBlur={ this.validateInput }
-                                            pattern={ this.getInputRegex(optionConfig.name) }
-                                            required={ optionConfig.required }
-                                            invalid={ !isValid }
-                                            data-param={ optionConfig.name !== 'url' }
-                                            id={ 'utm-link-' + optionConfig.name }/>
-                                { !isValid && <ValidationErrorContainer>
-                                    { this.state.translations.generatorForm.error[ validationMessageLabel ] }
-                                </ValidationErrorContainer> }
-                            </FormGroup>
-                        )
+                            return ( translations &&
+                                <IShardsReact.FormGroup key={ String(index) + optionConfig.name }>
+                                    <UTMLabel required={ optionConfig.required }
+                                              htmlFor={ 'utm-link-' + translations.label?.toLocaleLowerCase() }>
+                                        { translations.label }
+                                    </UTMLabel>
+
+                                    <ParamInput placeholder={ translations.placeholder }
+                                                name={ optionConfig.name }
+                                                onBlur={ this.validateInput }
+                                                pattern={ this.getInputRegex(optionConfig.name) }
+                                                required={ optionConfig.required }
+                                                invalid={ !isValid }
+                                                data-param={ optionConfig.name !== 'url' }
+                                                id={ 'utm-link-' + optionConfig.name }/>
+                                    { !isValid && <ValidationErrorContainer>
+                                        { formTranslations.error && formTranslations.error[ validationMessageLabel ] }
+                                    </ValidationErrorContainer> }
+                                </IShardsReact.FormGroup>
+                            )
+                        } else {
+                            return undefined
+                        }
                     })
                 }
 
@@ -317,21 +337,21 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
                     <CopyHelperInput value={ this.state.outputURL } ref={ this.copyURLRef } readOnly/>
                     <OutputInput value={ this.state.outputURL } innerRef={ this.outputRef } readOnly disabled required
                                  id="utm-output"
-                                 placeholder={ this.state.translations.generatorForm.outputPlaceholder }/>
+                                 placeholder={ this.state.translations.generatorForm?.outputPlaceholder }/>
                 </OutputFormGroup>
 
                 <UTMCompileOptionContainer>
-                    <FormCheckbox checked={ this.state.formOptions.forceLowerCaseOutput }
-                                  onChange={ this.lowercaseSwitchHandler } id="utm-lower-case" toggle
-                                  small/>
+                    <IShardsReact.FormCheckbox checked={ this.state.formOptions.forceLowerCaseOutput }
+                                               onChange={ this.lowercaseSwitchHandler } id="utm-lower-case" toggle
+                                               small/>
                     <UTMLabel
-                        htmlFor="utm-lower-case">{ this.state.translations.generatorForm.lowercaseSwitch }</UTMLabel>
+                        htmlFor="utm-lower-case">{ this.state.translations.generatorForm?.lowercaseSwitch }</UTMLabel>
 
                     <FormUtils>
                         <UTMResetButton pill
-                                        type="reset">{ this.state.translations.generatorForm.reset }</UTMResetButton>
+                                        type="reset">{ this.state.translations.generatorForm?.reset }</UTMResetButton>
                         <CopyOutputBtn type="button" theme="warning" pill onClick={ this.copyOutputToClipboard }>
-                            { this.state.translations.generatorForm.copy }
+                            { this.state.translations.generatorForm?.copy }
                             <FontAwesomeIcon icon={ faCopy }/>
                         </CopyOutputBtn>
                     </FormUtils>

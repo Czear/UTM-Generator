@@ -11,8 +11,13 @@ import GBFlag from 'Asset/UK-flag.svg'
 import langSwitcherBackground from 'Asset/lang-swich-bg--bold.svg'
 
 import { getCookie } from 'Tool/Cookie'
+
+import { IRecursivePartial, ITranslationObj } from 'Global'
+import { theme } from 'Theme'
+
 interface IState {
     languageChanged: boolean
+    translations: IRecursivePartial<ITranslationObj<string>>
 }
 
 const LogoImage = styled.img({
@@ -71,9 +76,21 @@ const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
 
 export default class Navigation extends React.Component<{}, IState> {
     private readonly langSwitchRef: React.RefObject<FormCheckbox> = React.createRef()
+    private readonly langConfig: IRecursivePartial<ITranslationObj<boolean>> = {
+        headingTitle: true,
+    }
 
     public state = {
         languageChanged: getCookie(languageService.languageCookieName) !== languageService.defaultLanguageValue,
+        translations: languageService.getPartialTranslation(this.langConfig),
+    }
+
+    public componentDidMount() {
+        languageService.store.subscribe((): void => {
+            this.setState({
+                translations: languageService.getPartialTranslation(this.langConfig),
+            })
+        })
     }
 
     private langSwitchChangeHandler = () => {

@@ -35,6 +35,9 @@ interface IProps {
 
 const UTMForm = styled(IShardsReact.Form)({
     padding: 32,
+    cursor: 'pointer',
+    boxShadow: '0 0 16px -4px #00000040',
+    borderRadius: '16px',
 })
 
 const OutputFormGroup = styled(IShardsReact.FormGroup)({
@@ -111,6 +114,20 @@ const ParamInput = styled(IShardsReact.FormInput)({
 
 const FormUtils = styled.div({
     marginLeft: 'auto',
+    [ `@media (max-width: ${ theme.mdBreakpoint }px)` ]: {
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'row-reverse',
+        justifyContent: 'flex-end',
+        marginTop: 16,
+        [ UTMResetButton ]: {
+            marginLeft: 16
+        },
+
+        [ CopyOutputBtn ]: {
+            marginLeft: 0
+        },
+    },
 })
 
 const ValidationErrorContainer = styled.div({

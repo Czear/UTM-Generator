@@ -20,6 +20,44 @@ interface IState {
     translations: IRecursivePartial<ITranslationObj<string>>
 }
 
+const NavigationBar = styled(Navbar)({
+    marginTop: '16px',
+    '& > *': {
+        width: '33%',
+        margin: 0,
+    },
+    h1: {
+        textAlign: 'center',
+        marginTop: '.65em',
+    },
+    ul: {
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+    },
+    [ `@media (max-width: ${ theme.lgBreakpoint }px)` ]: {
+        flexWrap: 'wrap',
+        ul: {
+            order: 1,
+        },
+        h1: {
+            width: '100%',
+            order: 2,
+        },
+    },
+    [ `@media (max-width: ${ theme.mdBreakpoint }px)` ]: {
+        h1: {
+            fontSize: '10vw',
+        },
+    },
+})
+
+const NavbarBrandContainer = styled(NavbarBrand)(() => ( {
+    padding: 0,
+    [ `@media (max-width: ${ theme.lgBreakpoint }px)` ]: {
+        order: 1,
+    },
+} ))
+
 const LogoImage = styled.img({
     height: 48,
 })
@@ -113,15 +151,17 @@ export default class Navigation extends React.Component<{}, IState> {
     }
 
     public render() {
-        return ( <Navbar>
-            <NavbarBrand href="/">
+        return ( <NavigationBar>
+            <NavbarBrandContainer href="/">
                 <LogoImage src={ LogoB64 } alt="brand logo"/>
-            </NavbarBrand>
-
+            </NavbarBrandContainer>
+            <h1>
+                { this.state.translations.headingTitle }
+            </h1>
             <Nav navbar>
                 <LagSwitcher checked={ this.state.languageChanged } ref={ this.langSwitchRef } toggle
                              onChange={ this.langSwitchChangeHandler }/>
             </Nav>
-        </Navbar> )
+        </NavigationBar> )
     }
 }

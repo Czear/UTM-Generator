@@ -10,6 +10,7 @@ import styled from 'styled-components'
 
 import UTMGenerator from 'Container/UTM-Generator'
 import Navigation from 'Container/Navigation'
+
 import { theme } from 'Theme'
 
 const Root = styled.div({
@@ -20,8 +21,12 @@ const Root = styled.div({
 })
 
 const Container = styled.main({
+    margin: '64px auto',
     '@media (min-width: 1200px)': {
         maxWidth: 960,
+    },
+    [ `@media (max-width: ${ theme.mdBreakpoint }px)` ]: {
+        margin: '32px auto',
     },
 })
 
@@ -30,6 +35,7 @@ class App extends React.Component {
         return (
             <Root>
                 <Navigation/>
+
                 <Container className="container">
                     <UTMGenerator/>
                 </Container>
@@ -42,7 +48,8 @@ class App extends React.Component {
                             <stop offset="85%" stopColor={ theme.cnvBlue }/>
                         </linearGradient>
                     </defs>
-                    <path d="M0,96L40,122.7C80,149,160,203,240,208C320,213,400,171,480,144C560,117,640,107,720,138.7C800,171,880,245,960,261.3C1040,277,1120,235,1200,213.3C1280,192,1360,192,1400,192L1440,192L1440,320L1400,320C1360,320,1280,320,1200,320C1120,320,1040,320,960,320C880,320,800,320,720,320C640,320,560,320,480,320C400,320,320,320,240,320C160,320,80,320,40,320L0,320Z"
+                    <path
+                        d="M0,96L40,122.7C80,149,160,203,240,208C320,213,400,171,480,144C560,117,640,107,720,138.7C800,171,880,245,960,261.3C1040,277,1120,235,1200,213.3C1280,192,1360,192,1400,192L1440,192L1440,320L1400,320C1360,320,1280,320,1200,320C1120,320,1040,320,960,320C880,320,800,320,720,320C640,320,560,320,480,320C400,320,320,320,240,320C160,320,80,320,40,320L0,320Z"
                         fill="url(#MyGradient)"/>
                 </svg>
             </Root>

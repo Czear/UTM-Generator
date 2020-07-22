@@ -88,6 +88,7 @@ const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
             '&::before, &::after': {
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
+                backgroundSize: 'cover',
             },
             '&::before': {
                 backgroundColor: 'unset',
@@ -104,6 +105,7 @@ const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
                 height: `calc(1.75rem - ${ buttonPadding } * 2 )`,
                 boxShadow: '0 0 16px -5px #000',
                 top: buttonPadding,
+                transitionProperty: 'left, transform',
                 left: props.checked ? `calc(3.125rem - ${ buttonPadding })` : buttonPadding,
             },
         },

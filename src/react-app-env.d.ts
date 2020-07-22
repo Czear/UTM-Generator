@@ -94,7 +94,7 @@ declare module 'UtmGenerator' {
 declare module 'shards-react' {
     import React, { RefObject } from 'react'
 
-    type ISize  = 'sm' | 'lg'
+    type ISize = 'sm' | 'lg'
     type ITheme = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark'
 
     interface IFormProps {
@@ -124,7 +124,7 @@ declare module 'shards-react' {
         innerRef: RefObject | string
     }
 
-    interface IFormCheckbox  {
+    interface IFormCheckbox {
         inline: boolean
         valid: boolean
         invalid: boolean
@@ -180,20 +180,37 @@ declare module 'shards-react' {
     }
 
     /* Basic elements */
-    export class Button extends React.Component<Partial<IButton> & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>> {}
+    export class Button extends React.Component<Partial<IButton> & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>> {
+    }
 
     /* Form */
-    export class Form extends React.Component<Partial<IFormProps> & React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>>{}
-    export class FormInput extends React.Component<Partial<IFormInput> & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>> {}
-    export class FormSelect extends React.Component<Partial<IFormSelect> & React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>> {}
-    export class FormGroup extends React.Component<Partial<IFormGroupProps> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> {}
-    export class FormCheckbox extends React.Component<Partial<IFormCheckbox> & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>> {}
-    export class FormTextarea extends React.Component<Partial<IFormTextarea> & React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>> {}
+    export class Form extends React.Component<Partial<IFormProps> & React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement> & { autocomplete: string }> {
+    }
+
+    export class FormInput extends React.Component<Partial<IFormInput> & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>> {
+    }
+
+    export class FormSelect extends React.Component<Partial<IFormSelect> & React.DetailedHTMLProps<React.SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>> {
+    }
+
+    export class FormGroup extends React.Component<Partial<IFormGroupProps> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> {
+    }
+
+    export class FormCheckbox extends React.Component<Partial<IFormCheckbox> & React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>> {
+    }
+
+    export class FormTextarea extends React.Component<Partial<IFormTextarea> & React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>> {
+    }
 
     /* Navigation */
-    export class Nav extends React.Component<Partial<INav> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLUListElement>, HTMLUListElement>> {}
-    export class Navbar extends React.Component<Partial<INavbar> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>> {}
-    export class NavbarBrand extends React.Component<Partial<INavbarBrand> & React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> > {}
+    export class Nav extends React.Component<Partial<INav> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLUListElement>, HTMLUListElement>> {
+    }
+
+    export class Navbar extends React.Component<Partial<INavbar> & React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>> {
+    }
+
+    export class NavbarBrand extends React.Component<Partial<INavbarBrand> & React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>> {
+    }
 }
 
 
@@ -216,7 +233,7 @@ declare module 'Global' {
         [P in keyof T]?: ITranslationConfig<T[P]> | boolean
     };
 
-    type IGenericObj<T> = { [key: string]: T}
+    type IGenericObj<T> = { [ key: string ]: T }
 
     interface ITranslationObj<T> {
         language: T

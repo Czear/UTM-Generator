@@ -199,6 +199,7 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
 
     private updateOutputURL = (): void => {
         const outputElement = this.outputRef.current
+        console.log('log')
 
         if (outputElement) {
             const root = outputElement.form
@@ -311,8 +312,7 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
 
     public render() {
         return (
-            <UTMForm onReset={ this.resetFormHandler } onChange={ this.updateOutputURL }>
-
+            <UTMForm onReset={ this.resetFormHandler } onChange={ this.updateOutputURL } autocomplete="off">
                 {
                     this.generatorOptionsConfiguration.map((optionConfig, index): JSX.Element | undefined => {
                         const validationMessageLabel = this.state.fieldsValidation[ optionConfig.name ]

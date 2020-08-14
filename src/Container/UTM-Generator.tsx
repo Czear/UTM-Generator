@@ -44,34 +44,32 @@ const OutputFormGroup = styled(IShardsReact.FormGroup)({
     display: 'flex',
 })
 
-const UTMResetButton = styled(IShardsReact.Button)((): CSSObject => {
-    const mainColor = theme.cnvBlue
-
-    return {
-        backgroundColor: mainColor,
-        borderColor: mainColor,
+const UTMResetButton = styled(IShardsReact.Button)({
+    backgroundImage: 'linear-gradient(    rgb(36,58,164) 0%,    rgb(36,58,134) 51%,    rgb(36, 58, 114) 100%)',
+    borderWidth: 0,
+    '&:hover' : {
+        backgroundImage: 'unset',
+        backgroundColor: theme.cnvBlue
     }
 })
 
-const CopyOutputBtn = styled(IShardsReact.Button)((): CSSObject => {
-    const mainColor = theme.cnvOrange
-
-    return {
-        padding: '.75rem 0.9rem',
-        marginLeft: 16,
-        color: '#fff',
-        backgroundColor: mainColor,
-        borderColor: mainColor,
-        ':hover': {
-            color: '#fff !important',
-        },
-        ':active': {
-            color: '#fff !important',
-        },
-        'svg': {
-            marginLeft: '.5em',
-        },
-    }
+const CopyOutputBtn = styled(IShardsReact.Button)({
+    padding: '.75rem 0.9rem',
+    marginLeft: 16,
+    color: '#fff',
+    backgroundImage: 'linear-gradient(rgb(253, 102, 33) 0%, rgb(253, 90, 31) 51%, rgb(253, 78, 30) 100%)',
+    borderWidth: 0,
+    ':hover': {
+        color: '#fff !important',
+        backgroundImage: 'unset',
+        backgroundColor: theme.cnvOrange
+    },
+    ':active': {
+        color: '#fff !important',
+    },
+    'svg': {
+        marginLeft: '.5em',
+    },
 })
 
 const UTMLabel = styled.label((props: { required?: boolean }): CSSObject => ( {
@@ -114,6 +112,9 @@ const ParamInput = styled(IShardsReact.FormInput)({
 
 const FormUtils = styled.div({
     marginLeft: 'auto',
+    'button': {
+        transitionDuration: '0s'
+    },
     [ `@media (max-width: ${ theme.mdBreakpoint }px)` ]: {
         width: '100%',
         display: 'flex',
@@ -365,9 +366,9 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
                         htmlFor="utm-lower-case">{ this.state.translations.generatorForm?.lowercaseSwitch }</UTMLabel>
 
                     <FormUtils>
-                        <UTMResetButton pill
+                        <UTMResetButton squared
                                         type="reset">{ this.state.translations.generatorForm?.reset }</UTMResetButton>
-                        <CopyOutputBtn type="button" theme="warning" pill onClick={ this.copyOutputToClipboard }>
+                        <CopyOutputBtn squared type="button" theme="warning" onClick={ this.copyOutputToClipboard }>
                             { this.state.translations.generatorForm?.copy }
                             <FontAwesomeIcon icon={ faCopy }/>
                         </CopyOutputBtn>

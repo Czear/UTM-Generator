@@ -3,9 +3,8 @@ import styled, { CSSObject } from 'styled-components'
 
 import languageService from 'Service/Language'
 
-import { Nav, Navbar, NavbarBrand, FormCheckbox } from 'shards-react'
+import { FormCheckbox } from 'shards-react'
 
-import LogoB64 from 'Asset/logo.png'
 import PLFlag from 'Asset/PL-flag.svg'
 import GBFlag from 'Asset/UK-flag.svg'
 import langSwitcherBackground from 'Asset/lang-swich-bg--bold.svg'
@@ -20,19 +19,16 @@ interface IState {
     translations: IRecursivePartial<ITranslationObj<string>>
 }
 
-const NavigationBar = styled(Navbar)({
-    marginTop: '16px',
-    '& > *': {
-        width: '33%',
-        margin: 0,
-    },
+const NavigationBar = styled.header({
+    marginBottom: 0,
+    paddingBottom: 0,
+    marginTop: '24px',
+    padding: '8px 0',
+    justifyContent: 'center',
+    position: 'relative',
     h1: {
         textAlign: 'center',
-        marginTop: '.65em',
-    },
-    ul: {
-        alignItems: 'flex-end',
-        justifyContent: 'center',
+        margin: 'auto'
     },
     [ `@media (max-width: ${ theme.lgBreakpoint }px)` ]: {
         flexWrap: 'wrap',
@@ -49,17 +45,6 @@ const NavigationBar = styled(Navbar)({
             fontSize: '10vw',
         },
     },
-})
-
-const NavbarBrandContainer = styled(NavbarBrand)(() => ( {
-    padding: 0,
-    [ `@media (max-width: ${ theme.lgBreakpoint }px)` ]: {
-        order: 1,
-    },
-} ))
-
-const LogoImage = styled.img({
-    height: 48,
 })
 
 const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
@@ -84,6 +69,11 @@ const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
 
     const buttonPadding = '5px'
     const styles = {
+        paddingLeft: '3.15rem',
+        position: 'absolute' as 'absolute',
+        right: 'calc(50% - 480px)',
+        width: 'unset',
+        bottom: 0,
         'label': {
             '&::before, &::after': {
                 backgroundPosition: 'center',
@@ -114,7 +104,7 @@ const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
     return addImportantToStyles(styles)
 })
 
-export default class Navigation extends React.Component<{}, IState> {
+export default class Header extends React.Component<{}, IState> {
     private readonly langSwitchRef: React.RefObject<FormCheckbox> = React.createRef()
     private readonly langConfig: IRecursivePartial<ITranslationObj<boolean>> = {
         headingTitle: true,
@@ -154,16 +144,11 @@ export default class Navigation extends React.Component<{}, IState> {
 
     public render() {
         return ( <NavigationBar>
-            <NavbarBrandContainer href="/">
-                <LogoImage src={ LogoB64 } alt="brand logo"/>
-            </NavbarBrandContainer>
             <h1>
                 { this.state.translations.headingTitle }
             </h1>
-            <Nav navbar>
-                <LagSwitcher checked={ this.state.languageChanged } ref={ this.langSwitchRef } toggle
-                             onChange={ this.langSwitchChangeHandler }/>
-            </Nav>
+            <LagSwitcher checked={ this.state.languageChanged } ref={ this.langSwitchRef } toggle
+                         onChange={ this.langSwitchChangeHandler }/>
         </NavigationBar> )
     }
 }

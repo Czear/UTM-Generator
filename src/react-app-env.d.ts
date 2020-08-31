@@ -179,6 +179,18 @@ declare module 'shards-react' {
         tag: string
     }
 
+    interface IListGroup {
+        flush: boolean
+        small: boolean
+        tag: string
+    }
+
+    interface IListGroupItem {
+        flush: boolean
+        small: boolean
+        tag: string
+    }
+
     /* Basic elements */
     export class Button extends React.Component<Partial<IButton> & React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>> {
     }
@@ -211,6 +223,13 @@ declare module 'shards-react' {
 
     export class NavbarBrand extends React.Component<Partial<INavbarBrand> & React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>> {
     }
+
+    /* List */
+    export class ListGroup extends React.Component<Partial<IListGroup>, & React.DetailedHTMLProps<React.HTMLAttributes<HTMLUListElement>, HTMLUListElement> & JSX.Element> {
+    }
+
+    export class ListGroupItem extends React.Component<Partial<IListGroupItem>, & React.DetailedHTMLProps<React.LiHTMLAttributes<HTMLLIElement>, HTMLLIElement>> {
+    }
 }
 
 
@@ -220,6 +239,12 @@ declare module 'UtmGenerator' {
 
     /* Translation error labels */
     type IErrorLabel = 'empty' | 'pattern'
+
+    interface IUTMOptionConfig {
+        name: IGeneratorField
+        required?: boolean
+        hints?: string[]
+    }
 }
 
 declare module 'Global' {

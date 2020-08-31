@@ -5,10 +5,9 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'shards-ui/dist/css/shards.min.css'
 import 'Global.scss'
 
-//import * as serviceWorker from './serviceWorker'
 import styled from 'styled-components'
 
-import UTMGenerator from 'Container/UTM-Generator'
+import UTMGenerator from 'Container/UTMGenerator'
 import Header from 'Container/Header'
 
 import { theme } from 'Theme'

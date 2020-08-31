@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from 'react'
 
-import styled, { CSSObject } from 'styled-components'
+import styled, { CSSObject, StyledComponent } from 'styled-components'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
@@ -9,12 +9,9 @@ import * as IShardsReact from 'shards-react'
 import languageService from 'Service/Language'
 import { theme } from 'Theme'
 import { IRecursivePartial, ITranslationConfig, ITranslationObj } from 'Global'
-import { IErrorLabel, IGeneratorField } from 'UtmGenerator'
+import { IErrorLabel, IGeneratorField, IUTMOptionConfig } from 'UtmGenerator'
 
-interface IUTMOptionConfig {
-    name: IGeneratorField
-    required?: boolean
-}
+import GeneratorInput from 'Container/GeneratorInput'
 
 type IFieldValidation = {
     [inputName in IGeneratorField]: IErrorLabel
@@ -35,10 +32,9 @@ interface IProps {
 
 const UTMForm = styled(IShardsReact.Form)({
     padding: 32,
-    cursor: 'pointer',
     boxShadow: '0 0 16px -4px #00000040',
     borderRadius: '16px',
-})
+}) as StyledComponent<typeof IShardsReact.Form, any, any> /* Prevent autocomplete attribute warning */
 
 const OutputFormGroup = styled(IShardsReact.FormGroup)({
     display: 'flex',
@@ -47,10 +43,10 @@ const OutputFormGroup = styled(IShardsReact.FormGroup)({
 const UTMResetButton = styled(IShardsReact.Button)({
     backgroundImage: 'linear-gradient(    rgb(36,58,164) 0%,    rgb(36,58,134) 51%,    rgb(36, 58, 114) 100%)',
     borderWidth: 0,
-    '&:hover' : {
+    '&:hover': {
         backgroundImage: 'unset',
-        backgroundColor: theme.cnvBlue
-    }
+        backgroundColor: theme.cnvBlue,
+    },
 })
 
 const CopyOutputBtn = styled(IShardsReact.Button)({
@@ -62,7 +58,7 @@ const CopyOutputBtn = styled(IShardsReact.Button)({
     ':hover': {
         color: '#fff !important',
         backgroundImage: 'unset',
-        backgroundColor: theme.cnvOrange
+        backgroundColor: theme.cnvOrange,
     },
     ':active': {
         color: '#fff !important',
@@ -103,17 +99,10 @@ const CopyHelperInput = styled.input({
     pointerEvents: 'none',
 })
 
-const ParamInput = styled(IShardsReact.FormInput)({
-    padding: '.5rem .8rem',
-    '&::placeholder': {
-        fontSize: '.8em',
-    },
-})
-
 const FormUtils = styled.div({
     marginLeft: 'auto',
     'button': {
-        transitionDuration: '0s'
+        transitionDuration: '0s',
     },
     [ `@media (max-width: ${ theme.mdBreakpoint }px)` ]: {
         width: '100%',
@@ -122,28 +111,18 @@ const FormUtils = styled.div({
         justifyContent: 'flex-end',
         marginTop: 16,
         [ UTMResetButton ]: {
-            marginLeft: 16
+            marginLeft: 16,
         },
 
         [ CopyOutputBtn ]: {
-            marginLeft: 0
+            marginLeft: 0,
         },
-    },
-})
-
-const ValidationErrorContainer = styled.div({
-    color: '#ef5350',
-    marginTop: '.5em',
-    '&::first-letter': {
-        textTransform: 'uppercase',
     },
 })
 
 export default class UTMGenerator extends React.Component<IProps, IState> {
-    protected readonly urlRegex = /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/ // protected for tests only
     private readonly copyURLRef: React.RefObject<HTMLInputElement> = React.createRef()
     private readonly outputRef: React.RefObject<HTMLInputElement> = React.createRef()
-    private readonly attributeFieldRegex = /(^(?![\s\S])|[^$&+,/:;=?@ "'<>#%{}|\\^~[\]`.]+)/
     private readonly generatorOptionsConfiguration: IUTMOptionConfig[] = [
         {
             name: 'url',
@@ -156,10 +135,12 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
         {
             name: 'source',
             required: true,
+            hints: ['google.pl', 'facebook.com', 'instagram.com', 'twitter.com' ]
         },
         {
             name: 'medium',
             required: true,
+            hints: [ 'cpc', 'email', 'social', 'affiliate' ],
         },
         {
             name: 'term',
@@ -199,52 +180,48 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
     }
 
     private updateOutputURL = (): void => {
-        const outputElement = this.outputRef.current
-        console.log('log')
+        const root = this.outputRef.current?.form
 
-        if (outputElement) {
-            const root = outputElement.form
+        if (root) {
+            let generatedURL = ''
 
-            if (root) {
-                let generatedURL = ''
+            if (root.checkValidity()) {
+                const formData = new FormData(root)
+                const urlValue = formData.get('url') as string
+                let urlInput = ''
 
-                if (root.checkValidity()) {
-                    const formData = new FormData(root)
-                    const urlValue = formData.get('url') as string
-                    let urlInput = ''
+                // Remove url data from formData (it is not needed any more + it makes mess in params add loop)
+                formData.delete('url')
 
-                    // Remove url data from formData (it is not needed any more + it makes mess in params add loop)
-                    formData.delete('url')
-
-                    // Add protocol if missing
-                    if (urlValue) {
-                        urlInput += ( !/^http/.test(urlValue) ? 'http://' : '' ) + urlValue
-                    }
-
-                    const urlObject = new URL(urlInput)
-                    generatedURL += urlObject.origin
-
-                    if (urlObject.pathname !== '/') {
-                        generatedURL += urlObject.pathname
-                    }
-
-                    generatedURL += urlObject.search
-
-                    //Add params
-                    for (const [ inputName, inputValue ] of formData.entries()) {
-                        if (inputValue) {
-                            generatedURL += `${ ( /\?/.test(generatedURL) ? '&' : '?' ) }utm_${ inputName }=${ inputValue }`
-                        }
-                    }
-
-                    generatedURL += urlObject.hash
+                // Add protocol if missing
+                if (urlValue) {
+                    urlInput += ( !/^http/.test(urlValue) ? 'http://' : '' ) + urlValue
                 }
 
-                this.setState((prevState) => ( {
-                    outputURL: prevState.formOptions.forceLowerCaseOutput ? generatedURL.toLowerCase() : generatedURL,
-                } ))
+                const urlObject = new URL(urlInput)
+                generatedURL += urlObject.origin
+
+                if (urlObject.pathname !== '/') {
+                    generatedURL += urlObject.pathname
+                }
+
+                generatedURL += urlObject.search
+
+                //Add params
+                for (const [ inputName, inputValue ] of formData.entries()) {
+                    if (inputValue) {
+                        generatedURL += `${ ( /\?/.test(generatedURL) ? '&' : '?' ) }utm_${ inputName }=${ inputValue }`
+                    }
+                }
+
+                generatedURL += urlObject.hash
             }
+
+            this.setState((prevState) => ( {
+                outputURL: prevState.formOptions.forceLowerCaseOutput ? generatedURL.toLowerCase() : generatedURL,
+            } ))
         }
+
     }
 
     private lowercaseSwitchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -275,78 +252,12 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
         } ))
     }
 
-    private getInputRegex = (elementName: string): string => {
-        let elementRegex = this.attributeFieldRegex
-        if (elementName === 'url') {
-            elementRegex = this.urlRegex
-        }
-
-        return elementRegex.toString().replace(/^.|.$/g, '')
-    }
-
-    private validateInput = (event: React.FocusEvent<HTMLInputElement>): void => {
-        const targetInput = event.target
-        const inputValue = targetInput.value
-        const inputName = targetInput.name as IGeneratorField
-        let validationErrorLabel: IErrorLabel | undefined
-
-        if (targetInput.required && !inputValue.length) {
-            validationErrorLabel = 'empty'
-        } else if (targetInput.pattern.length && !new RegExp(targetInput.pattern).test(inputValue)) {
-            validationErrorLabel = 'pattern'
-        }
-
-        if (this.state.fieldsValidation[ inputName ] !== validationErrorLabel) { // Update if label differs
-            this.setState((prevState) => {
-                const stateCopy = { ...prevState }
-
-                if (validationErrorLabel) { // Update state with new label
-                    stateCopy.fieldsValidation[ inputName ] = validationErrorLabel
-                } else { // Remove label missing
-                    delete stateCopy.fieldsValidation[ inputName ]
-                }
-
-                return stateCopy
-            })
-        }
-    }
-
     public render() {
         return (
-            <UTMForm onReset={ this.resetFormHandler } onChange={ this.updateOutputURL } autocomplete="off">
+            <UTMForm onReset={ this.resetFormHandler } onChange={ this.updateOutputURL } autoComplete="off">
                 {
-                    this.generatorOptionsConfiguration.map((optionConfig, index): JSX.Element | undefined => {
-                        const validationMessageLabel = this.state.fieldsValidation[ optionConfig.name ]
-                        const isValid = !validationMessageLabel
-                        const formTranslations = this.state.translations.generatorForm
-
-                        if (formTranslations && formTranslations.field && formTranslations.field[ optionConfig.name ]) {
-                            const translations = formTranslations.field[ optionConfig.name ]
-
-                            return ( translations &&
-                                <IShardsReact.FormGroup key={ String(index) + optionConfig.name }>
-                                    <UTMLabel required={ optionConfig.required }
-                                              htmlFor={ 'utm-link-' + translations.label?.toLocaleLowerCase() }>
-                                        { translations.label }
-                                    </UTMLabel>
-
-                                    <ParamInput placeholder={ translations.placeholder }
-                                                name={ optionConfig.name }
-                                                onBlur={ this.validateInput }
-                                                pattern={ this.getInputRegex(optionConfig.name) }
-                                                required={ optionConfig.required }
-                                                invalid={ !isValid }
-                                                data-param={ optionConfig.name !== 'url' }
-                                                id={ 'utm-link-' + optionConfig.name }/>
-                                    { !isValid && <ValidationErrorContainer>
-                                        { formTranslations.error && formTranslations.error[ validationMessageLabel ] }
-                                    </ValidationErrorContainer> }
-                                </IShardsReact.FormGroup>
-                            )
-                        } else {
-                            return undefined
-                        }
-                    })
+                    this.generatorOptionsConfiguration.map((optionConfig, index): JSX.Element =>
+                        <GeneratorInput { ...optionConfig } key={ index + optionConfig.name }/>)
                 }
 
                 <hr/>

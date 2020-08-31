@@ -7,7 +7,7 @@
     "outputPlaceholder": "Please, fill in fields above",
     "lowercaseSwitch": "Force lowercase output",
     "error" : {
-      "empty": "cannot be empty",
+      "empty": "Cannot be empty",
       "pattern": "Pattern error"
     },
     "field": {

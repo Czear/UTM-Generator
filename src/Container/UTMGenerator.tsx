@@ -4,7 +4,7 @@ import React from 'react'
 /* Element */
 import * as IShardsReact from 'shards-react'
 import * as FormElements from 'App/Theme/FormElement'
-import GeneratorInput from 'Container/GeneratorInput'
+import LinkPropertyInput from 'Container/LinkPropertyInput'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 /* Language */
@@ -291,7 +291,7 @@ export default class UTMGenerator extends React.Component<{}, IState> {
             <FormElements.UTMForm onReset={ this.onFormReset } autoComplete="off" onCopy={ this.onFormCopy }>
                 {
                     this.generatorOptionsConfiguration.map((optionConfig, index): JSX.Element => (
-                        <GeneratorInput { ...optionConfig } hints={ this.getParsedHints(optionConfig.name) }
+                        <LinkPropertyInput { ...optionConfig } hints={ this.getParsedHints(optionConfig.name) }
                                            key={ index + '-' + optionConfig.name }
                                            updateHints={ this.updateHintsHistory }
                                            change={ this.onInputChange }/>

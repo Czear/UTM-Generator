@@ -7,50 +7,22 @@ import { FormCheckbox } from 'shards-react'
 
 import PLFlag from 'Asset/PL-flag.svg'
 import GBFlag from 'Asset/UK-flag.svg'
-import langSwitcherBackground from 'Asset/lang-swich-bg--bold.svg'
 
 import { getCookie } from 'Tool/Cookie'
 
 import { IRecursivePartial, ITranslationObj } from 'Global'
-import { theme } from 'Theme'
+import ThemeConfig from 'Theme/Layout'
 
 interface IState {
     languageChanged: boolean
     translations: IRecursivePartial<ITranslationObj<string>>
 }
 
-const NavigationBar = styled.header({
-    marginBottom: 0,
-    paddingBottom: 0,
-    marginTop: '24px',
-    padding: '8px 0',
-    justifyContent: 'center',
-    position: 'relative',
-    h1: {
-        textAlign: 'center',
-        margin: 'auto'
-    },
-    [ `@media (max-width: ${ theme.lgBreakpoint }px)` ]: {
-        flexWrap: 'wrap',
-        ul: {
-            order: 1,
-        },
-        h1: {
-            width: '100%',
-            order: 2,
-        },
-    },
-    [ `@media (max-width: ${ theme.mdBreakpoint }px)` ]: {
-        h1: {
-            fontSize: '10vw',
-        },
-    },
-})
-
-const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
+const LangSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
     const addImportantToStyles = (obj: CSSObject): CSSObject => {
         let outputObj: CSSObject = {}
 
+        /* Add '!important' */
         for (const [ key, value ] of Object.entries(obj)) {
             if (/string|number/.test(typeof value)) {
                 outputObj[ key ] = `${ value } !important`
@@ -69,12 +41,19 @@ const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
 
     const buttonPadding = '5px'
     const styles = {
+        display: 'flex',
+        alignItems: 'center',
         paddingLeft: '3.15rem',
         position: 'absolute' as 'absolute',
         right: 'calc(50% - 480px)',
         width: 'unset',
         bottom: 0,
-        'label': {
+        label: {
+
+            position: 'relative' as 'relative',
+            width: '3.125rem',
+            height: '1.75rem',
+            margin: '0 0.5rem',
             '&::before, &::after': {
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -82,7 +61,6 @@ const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
             },
             '&::before': {
                 backgroundColor: 'unset',
-                backgroundImage: `url(${ langSwitcherBackground })`,
                 backgroundSize: '95%',
                 borderColor: '#becad6',
             },
@@ -99,9 +77,56 @@ const LagSwitcher = styled(FormCheckbox)((props: { checked: boolean }) => {
                 left: props.checked ? `calc(3.125rem - ${ buttonPadding })` : buttonPadding,
             },
         },
+        '&::before': {
+            content: '"EN"',
+        },
+        '&::after': {
+            content: '"PL"',
+        },
+
+        [ `@media (min-width: ${ ThemeConfig.mdBreakpoint }px) and (max-width: ${ ThemeConfig.lgBreakpoint - 1 }px)` ]: {
+            right: '0',
+        },
+        [ `@media (max-width: ${ ThemeConfig.mdBreakpoint }px)` ]: {
+            position: 'static' as 'static',
+            padding: 0,
+        },
     }
 
     return addImportantToStyles(styles)
+})
+
+const langSwitcherSelector = LangSwitcher.toString()
+
+const NavigationBar = styled.header({
+    marginBottom: 0,
+    paddingBottom: 0,
+    marginTop: '24px',
+    padding: '8px 0',
+    position: 'relative',
+    h1: {
+        fontSize: '2.75rem',
+        textAlign: 'center',
+        margin: 'auto',
+    },
+    [ `@media (max-width: ${ ThemeConfig.mdBreakpoint }px)` ]: {
+        display: 'flex',
+        justifyContent: 'space-between',
+
+        h1: {
+            margin: 0,
+        },
+        [ langSwitcherSelector ]: {
+            marginBottom: 0,
+        },
+    },
+    [ `@media (max-width: ${ ThemeConfig.smBreakpoint }px)` ]: {
+        margin: '24px 12px 0',
+
+        h1: {
+            fontSize: '8vw',
+        },
+    },
 })
 
 export default class Header extends React.Component<{}, IState> {
@@ -147,8 +172,8 @@ export default class Header extends React.Component<{}, IState> {
             <h1>
                 { this.state.translations.headingTitle }
             </h1>
-            <LagSwitcher checked={ this.state.languageChanged } ref={ this.langSwitchRef } toggle
-                         onChange={ this.langSwitchChangeHandler }/>
+            <LangSwitcher checked={ this.state.languageChanged } ref={ this.langSwitchRef } toggle
+                          onChange={ this.langSwitchChangeHandler }/>
         </NavigationBar> )
     }
 }

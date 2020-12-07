@@ -1,8 +1,12 @@
-import styled, { CSSObject, StyledComponent } from 'styled-components'
+
+import Layout from 'Theme/Layout'
+
 import * as IShardsReact from 'shards-react'
-import { theme } from 'Theme'
-import { IStringifyBool } from 'Global'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
+import { IStringifyBool } from 'Global'
+import styled, { CSSObject, StyledComponent } from 'styled-components'
+
 
 export const UTMForm = styled(IShardsReact.Form)({
     padding: 32,
@@ -15,7 +19,7 @@ export const UTMResetButton = styled(IShardsReact.Button)({
     borderWidth: 0,
     '&:hover': {
         backgroundImage: 'unset',
-        backgroundColor: theme.cnvBlue,
+        backgroundColor: Layout.cnvBlue,
     },
 })
 
@@ -28,7 +32,7 @@ export const CopyOutputBtn = styled(IShardsReact.Button)({
     ':hover': {
         color: '#fff !important',
         backgroundImage: 'unset',
-        backgroundColor: theme.cnvOrange,
+        backgroundColor: Layout.cnvOrange,
     },
     ':active': {
         color: '#fff !important',
@@ -41,7 +45,7 @@ export const CopyOutputBtn = styled(IShardsReact.Button)({
 export const UTMLabel = styled.label((props: { required?: boolean }): CSSObject => ( {
     '&::after': {
         content: props.required ? '\'*\'' : 'unset',
-        color: theme.errorRed,
+        color: Layout.errorRed,
         'margin-left': '.25em',
     },
 } ))
@@ -65,7 +69,7 @@ export const FormUtils = styled.div({
     'button': {
         transitionDuration: '0s',
     },
-    [ `@media (max-width: ${ theme.smBreakpoint }px)` ]: {
+    [ `@media (max-width: ${ Layout.smBreakpoint }px)` ]: {
         width: '100%',
         display: 'flex',
         flexDirection: 'row-reverse',
@@ -102,7 +106,7 @@ export const ParamInput = styled(IShardsReact.FormInput)((props: ( { [ 'contains
                 cursor: 'initial',
                 borderBottomRightRadius: 0,
                 borderBottomLeftRadius: 0,
-                borderColor: theme.focusSelectBorderColor + ' !important',
+                borderColor: Layout.focusSelectBorderColor + ' !important',
                 backgroundSize: 0,
                 marginBottom: '-1px',
                 boxShadow: 'unset !important',
@@ -146,7 +150,7 @@ export const RemoveHintFaIco = styled(FontAwesomeIcon)({
 
 
 export const HintItem = styled(IShardsReact.ListGroupItem)((props: { disabled?: boolean }) => ( {
-    borderColor: theme.focusSelectBorderColor,
+    borderColor: Layout.focusSelectBorderColor,
     backgroundColor: props.disabled ? '#f2f2f2' : '#ffffff',
     display: 'flex',
     alignItems: 'center',

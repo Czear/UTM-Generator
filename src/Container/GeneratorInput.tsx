@@ -1,126 +1,45 @@
-import React, { Fragment } from 'react'
-import * as IShardsReact from 'shards-react'
+/* React */
+import React, { ChangeEvent, Fragment } from 'react'
 
-import { theme } from 'Theme'
+/* Element */
+import { FormGroup } from 'shards-react'
+import {
+    HintItem,
+    HintsDropdownFaIco,
+    HintText,
+    ParamInput,
+    RemoveHint,
+    UserInputContainer,
+    UTMLabel,
+    ValidationErrorContainer,
+} from 'App/Theme/FormElement'
 
+/* Language */
 import languageService from 'Service/Language'
 
-import { IRecursivePartial, ITranslationObj } from 'Global'
-import { IErrorLabel, IUTMOptionConfig } from 'UtmGenerator'
-import styled, { CSSObject } from 'styled-components'
+/* Interface */
+import { IRecursivePartial, IStringifyBool, ITranslationObj } from 'Global'
+import { IErrorLabel, IHintConfig, IHintsHistory, IUTMOptionConfig } from 'UtmGenerator'
+
+/* Asset */
 import { faSortDown } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { getCookie, setCookie } from 'Tool/Cookie'
+import InputHints from 'Component/InputHints'
 
 interface IState {
     translations: IRecursivePartial<ITranslationObj<string>>
     validationMessage?: IErrorLabel
-    hints?: string[]
     showHints?: boolean
-    hintsFading?: boolean
+    showValidation: boolean
 }
 
-type IStringifyBool = 'true' | 'false';
+interface IProps extends IUTMOptionConfig<IHintConfig> {
+    updateHints: Function
+}
 
-const focusSelectBorderColor = '#becad6'
-
-const UserInputContainer = styled.div({
-    position: 'relative' as 'relative',
-    'svg': {
-        pointerEvents: 'none',
-        cursor: 'pointer',
-        position: 'absolute' as 'absolute',
-        transform: 'translateY(-50%)',
-        top: 16,
-        right: 12,
-    },
-})
-
-
-const UTMLabel = styled.label((props: { required?: boolean }): CSSObject => ( {
-    '&::after': {
-        content: props.required ? '\'*\'' : 'unset',
-        color: theme.red,
-        'margin-left': '.25em',
-    },
-} ))
-
-const HintItem = styled(IShardsReact.ListGroupItem)((props: { disabled?: boolean }) => ( {
-    borderColor: focusSelectBorderColor,
-//    cursor: props.disabled ? 'not-allowed' : 'pointer',
-    backgroundColor: props.disabled ? '#f2f2f2' : '#ffffff',
-    '&:hover': {
-        backgroundColor: '#57b8ff',
-        fontWeight: 700,
-        color: '#ffffff',
-    },
-} ))
-
-//const HintsContainer = styled(IShardsReact.ListGroup)({
-const HintsContainer = styled.ul({
-    margin: 0,
-    transitionDuration: '.2s',
-    position: 'absolute' as 'absolute',
-    zIndex: 1,
-    cursor: 'pointer',
-    width: '100%',
-    borderTopRightRadius: 0,
-    borderTopLeftRadius: 0,
-    [ HintItem ]: {
-        borderTopRightRadius: 0,
-        borderTopLeftRadius: 0,
-    },
-})
-
-const ParamInput = styled(IShardsReact.FormInput)((props: ( { hints: IStringifyBool, [ 'hints-visible' ]?: IStringifyBool } )) => {
-    const containsHints = props.hints === 'true'
-
-    let styles: CSSObject = {
-        padding: '.5rem .8rem',
-        cursor: containsHints ? 'pointer' : 'initial',
-        '&::placeholder': {
-            fontSize: '.8em',
-        },
-    }
-
-    if (props[ 'hints-visible' ] === 'true') {
-        styles = {
-            ...styles,
-            ...{
-                cursor: 'initial',
-                borderBottomRightRadius: 0,
-                borderBottomLeftRadius: 0,
-                borderColor: focusSelectBorderColor + ' !important',
-                backgroundSize: 0,
-                marginBottom: '-1px',
-                boxShadow: 'unset !important',
-                backgroundImage: 'unset !important',
-                '& + svg': {
-                    transform: 'rotate(180deg) ',
-                },
-            },
-        }
-    }
-
-
-    if (containsHints) {
-        styles.backgroundPosition = 'right calc(.375em + .1875rem + 18px) center !important'
-    }
-
-    return styles
-})
-
-const ValidationErrorContainer = styled.div({
-    color: '#ef5350',
-    marginTop: '.5em',
-    '&::first-letter': {
-        textTransform: 'uppercase',
-    },
-})
-
-export default class GeneratorInput extends React.Component<IUTMOptionConfig, IState> {
+export default class LinkPropertyInput extends React.Component<IProps, IState> {
     private readonly inputElementRef = React.createRef<HTMLInputElement>()
-    private readonly hintsContainerRef = React.createRef<HTMLUListElement>()
-    protected readonly urlRegex = /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([-.][a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/ // protected for tests only
+    private readonly urlRegex = /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([-.][a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/ // protected for tests only
     private readonly attributeFieldRegex = /(^(?![\s\S])|[^$&+,/:;=?@ "'<>#%{}|\\^~[\]`.]+)/
     private readonly translationConfig = {
         generatorForm: {
@@ -133,11 +52,11 @@ export default class GeneratorInput extends React.Component<IUTMOptionConfig, IS
 
     public state: IState = {
         translations: languageService.getPartialTranslation(this.translationConfig),
+        showValidation: true,
     }
 
-    /* Init */
+    /* Hooks */
     public componentDidMount() {
-
         /* Language change subsection */
         languageService.store.subscribe((): void => {
             this.setState({
@@ -146,16 +65,27 @@ export default class GeneratorInput extends React.Component<IUTMOptionConfig, IS
         })
 
         /* Include hints related stuff into state if there were specified with props */
-        if (this.props.hints) {
+        const propsHints = this.props.hints
+        if (propsHints) {
             this.setState((prevState) => ( {
                 ...prevState,
-                hints: [ ...this.props.hints as string[] ],
+                hints: [ ...propsHints ],
                 showHints: false,
             } ))
         }
     }
 
     /* Tools */
+    private get inputElement(): HTMLInputElement {
+        const inputElement = this.inputElementRef.current
+
+        if (inputElement) {
+            return inputElement
+        }
+
+        throw new Error('Input element not rendered yet')
+    }
+
     private getInputRegex = (inputName: string): string => {
         let elementRegex = this.attributeFieldRegex
         if (inputName === 'url') {
@@ -165,34 +95,123 @@ export default class GeneratorInput extends React.Component<IUTMOptionConfig, IS
         return elementRegex.toString().replace(/^.|.$/g, '')
     }
 
-    /* Functionality */
-    private inputGainFocus = () => {
-        this.manageHintVisibility(true)
+    private hideHintsClickCallback = (event: MouseEvent) => {
+        const target = event.target
+
+        if (target !== this.inputElement && ( target instanceof HTMLElement && !target.matches(RemoveHint) )) {
+            document.removeEventListener('click', this.hideHintsClickCallback)
+            this.manageHintVisibility(false)
+        }
     }
 
-    private inputLooseFocus = (event: React.FocusEvent<HTMLInputElement>) => {
-        if (event.nativeEvent.relatedTarget) {
-            this.manageHintVisibility(false)
+    private parseStringIntoRegexString = (input: string): string => input.replace(/([[\\^$.|?*+()])/, '\\$1')
+
+    /* Functionality */
+
+    /* DOM handlers */
+    private inputGainFocus = () => {
+        this.manageHintVisibility(true)
+        this.setState({
+            showValidation: false,
+        })
+    }
+
+    private inputLooseFocus = (event: React.FocusEvent) => {
+        const eventRelativeTarget = event.nativeEvent.relatedTarget
+
+        if (eventRelativeTarget instanceof HTMLElement) {
+            if (!eventRelativeTarget.matches(RemoveHint.toString())) {
+                this.manageHintVisibility(false)
+            }
         } else if (!this.state.showHints) {
             this.updateInputValue()
         }
+
+        this.setState({
+            showValidation: true,
+        })
     }
+
+    private hintClickHandler = (event: React.MouseEvent<HTMLUListElement>) => {
+        const target = event.target
+
+        if (target instanceof HTMLElement) {
+
+            if (target.matches(HintItem.toString())) {
+                this.updateInputValue(String(target.textContent).trim())
+            }
+
+            if (!target.matches(RemoveHint.toString())) {
+                this.manageHintVisibility(false)
+            }
+        }
+    }
+
+    private inputChangeHandler = (event: ChangeEvent) => {
+        event.preventDefault()
+
+        /* Validate value before change event is +*/
+        this.updateInputValue()
+    }
+
+    /* Input related methods */
+
+    /**
+     * Updates input value with onChange event
+     */
+    private updateInputValue = async (newValue?: string): Promise<void> => {
+        const inputElement = this.inputElement
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement?.prototype, 'value')?.set
+
+        if (nativeInputValueSetter) {
+            const inputValue = newValue ?? inputElement.value
+
+            if (newValue) {
+                inputElement.value = inputValue
+            }
+
+            await this.validateInput()
+
+            /* Update parent element input values */
+            this.props.change(this.props.name, this.state.validationMessage || !inputValue ? false : inputValue)
+        }
+    }
+
+    private validateInput = async (): Promise<void> => {
+        const targetInput = this.inputElement
+        const inputValue = targetInput.value
+        let validationErrorLabel: IErrorLabel | undefined
+
+        if (targetInput.required && !inputValue.length) {
+            validationErrorLabel = 'empty'
+        } else if (targetInput.pattern.length && !new RegExp(targetInput.pattern).test(inputValue)) {
+            validationErrorLabel = 'pattern'
+        }
+
+
+        if (this.state.validationMessage !== validationErrorLabel) { /* Update if label differs */
+            await this.setState((prevState) => ( {
+                ...prevState,
+                validationMessage: validationErrorLabel,
+            } ))
+        }
+    }
+
+    /* Other */
 
     /**
      * Hide / show / toggle hints visibility
      */
     private manageHintVisibility = (showHints = !this.state.showHints) => {
-        if (showHints && !this.state.showHints) {
-            const shutDownHintsDisplay = (event: MouseEvent) => {
-                if (event.target !== this.inputElementRef.current) {
-                    document.removeEventListener('click', shutDownHintsDisplay)
-                    this.manageHintVisibility(false)
-                }
-            }
-            document.addEventListener('click', shutDownHintsDisplay)
-        } else if (!showHints) {
-            this.inputElementRef.current?.blur()
-            this.updateInputValue()
+        /* this.state.showHints could be undefined */
+        if (showHints && this.state.showHints === false) {
+            document.addEventListener('click', this.hideHintsClickCallback)
+        }
+
+        if (!showHints) {
+            this.inputElement.blur()
+
+            document.removeEventListener('click', this.hideHintsClickCallback)
         }
 
         if (this.props.hints) {
@@ -202,120 +221,93 @@ export default class GeneratorInput extends React.Component<IUTMOptionConfig, IS
         }
     }
 
-    /**
-     * Updates input value with onChange event
-     *
-     * @param newValue - input value to set. Can be empty ro only trigger form onChange
-     */
-    private updateInputValue = (newValue?: string): void => {
-        const inputElement = this.inputElementRef.current
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement?.prototype, 'value')?.set
+    private removeHint = (hintContent: string) => {
+        const historyCookieName = 'hintsHistory'
 
-        if (inputElement && nativeInputValueSetter) {
-            const inputValue = newValue ? newValue : inputElement.value
+        const historyCookie = getCookie(historyCookieName) as IHintsHistory
 
-            /* Set input to dummy value, so the change event can occur  */
-            inputElement.value += ' '
+        /* Filter out targeted hint */
+        historyCookie[ this.props.name ] = historyCookie[ this.props.name ]?.filter((savedHint) => savedHint !== hintContent)
 
-            /* Use native setter to trigger event properly */
-            nativeInputValueSetter.call(inputElement, inputValue.trim())
-
-            inputElement.dispatchEvent(new Event('input', { bubbles: true }))
-
-            this.validateInput()
+        if (!historyCookie[ this.props.name ]?.length) {
+            delete historyCookie[ this.props.name ]
         }
 
+        setCookie(historyCookieName, historyCookie as {})
+        this.props.updateHints()
     }
 
-    private hintClickHandler = (event: React.MouseEvent<HTMLUListElement>) => {
-        const target = event.target
-        const inputElement = this.inputElementRef.current
+    private getHintContentElement = (hintContent: string): JSX.Element => {
+        let boldedText = null
+        let regularText = hintContent
 
-        if (target instanceof Element && target.nodeName === 'LI' && inputElement) {
-            inputElement.value = ( String(target.textContent) )
+        if (hintContent.length) {
+            const matchedTextRegex = new RegExp('^' + this.parseStringIntoRegexString(this.inputElement.value))
+            const regularTextMatch = hintContent.match(matchedTextRegex)
+
+            boldedText = hintContent.replace(matchedTextRegex, '')
+            regularText = regularTextMatch === null ? '' : regularTextMatch[ 0 ]
         }
 
-        this.manageHintVisibility(false)
-    }
-
-    private validateInput = (): void => {
-        if (this.inputElementRef.current) {
-            const targetInput = this.inputElementRef.current
-            const inputValue = targetInput.value
-            let validationErrorLabel: IErrorLabel | undefined
-
-            if (targetInput.required && !inputValue.length) {
-                validationErrorLabel = 'empty'
-            } else if (targetInput.pattern.length && !new RegExp(targetInput.pattern).test(inputValue)) {
-                validationErrorLabel = 'pattern'
-            }
-
-            if (this.state.validationMessage !== validationErrorLabel) { /* Update if label differs */
-                this.setState((prevState) => ( {
-                    ...prevState,
-                    validationMessage: validationErrorLabel,
-                } ))
-            }
-        }
-    }
-
-    private inputChangeHandler = () => {
-        if (this.props.hints) {
-            this.setState({
-                hints: this.props.hints.filter((hint) => {
-                    const inputValue = this.inputElementRef.current?.value
-                    return !( inputValue && ( !( new RegExp(inputValue, 'i') ).test(hint) || hint === inputValue ) )
-                }),
-            })
-        }
+        return <HintText>
+            { regularText }{ boldedText && ( <b>{ boldedText }</b> ) }
+        </HintText>
     }
 
     public render() {
+        /* Translations */
         const inputTranslationsObj = this.state.translations.generatorForm?.field
         const errorsTranslations = this.state.translations.generatorForm?.error
+        const inputTranslations = inputTranslationsObj ? inputTranslationsObj[ this.props.name ] : null
 
-        if (inputTranslationsObj) {
-            const inputTranslations = inputTranslationsObj[ this.props.name ]
-
-            return ( inputTranslations &&
-                <IShardsReact.FormGroup>
-                    <UTMLabel required={ this.props.required }
-                              htmlFor={ 'utm-link-' + inputTranslations.label?.toLocaleLowerCase() }>
-                        { inputTranslations.label }
-                    </UTMLabel>
-                    <UserInputContainer>
-                        <ParamInput placeholder={ inputTranslations.placeholder }
-                                    hints-visible={ this.state.showHints?.toString() as IStringifyBool }
-                                    name={ this.props.name }
-                                    onFocus={ this.inputGainFocus }
-                                    onBlur={ this.inputLooseFocus }
-                                    onChange={ this.inputChangeHandler }
-                                    pattern={ this.getInputRegex(this.props.name) }
-                                    required={ this.props.required }
-                                    invalid={ !!this.state.validationMessage }
-                                    hints={ ( !!this.state.hints ).toString() as IStringifyBool }
-                                    data-param={ this.props.name !== 'url' }
-                                    innerRef={ this.inputElementRef }
-                                    id={ 'utm-link-' + this.props.name }/>
-
-                        { !!this.props.hints?.length && <Fragment>
-                            <FontAwesomeIcon icon={ faSortDown }/>
-
-                            { this.state.showHints &&
-                            <HintsContainer onClick={ this.hintClickHandler } ref={ this.hintsContainerRef }>
-                                { this.state.hints?.length ? this.state.hints.map((hint, index) => (
-                                        <HintItem key={ index + String(hint) }>{ hint } </HintItem> )) :
-                                    <HintItem disabled>no hints /* ToDo */</HintItem> }
-                            </HintsContainer> }
-
-                        </Fragment> }
-                    </UserInputContainer>
-
-                    { this.state.validationMessage && <ValidationErrorContainer>
-                        { errorsTranslations && errorsTranslations[ this.state.validationMessage ] }
-                    </ValidationErrorContainer> }
-                </IShardsReact.FormGroup>
-            )
+        
+        /* Missing translations */
+        if (!( inputTranslationsObj && inputTranslations && errorsTranslations)) {
+            return
         }
+
+        /* Hints */
+        const filteredHints = this.props.hints?.filter((hintConfig) => hintConfig.value.match(new RegExp('^' + ( this.inputElementRef.current ? this.inputElement.value : '' ))))
+        const hintsVisible = !!( this.state.showHints && filteredHints?.length )
+
+        return ( <FormGroup>
+                <UTMLabel required={ this.props.required }
+                          htmlFor={ 'utm-link-' + inputTranslations.label?.toLocaleLowerCase() }>
+                    { inputTranslations.label }
+                </UTMLabel>
+                <UserInputContainer>
+                    <ParamInput placeholder={ inputTranslations.placeholder }
+                                id={ 'utm-link-' + this.props.name }
+                                name={ this.props.name }
+                                pattern={ this.getInputRegex(this.props.name) }
+                                required={ this.props.required }
+                                invalid={ !!( this.state.validationMessage && this.state.showValidation ) }
+                                innerRef={ this.inputElementRef }
+                                onFocus={ this.inputGainFocus }
+                                onBlur={ this.inputLooseFocus }
+                                onChange={ this.inputChangeHandler }
+                                contains-hints={ ( !!filteredHints ).toString() as IStringifyBool }
+                                hints-visible={ hintsVisible.toString() as IStringifyBool }
+                    />
+
+                    { !!filteredHints?.length && <Fragment>
+                        <HintsDropdownFaIco onClick={ () => this.manageHintVisibility() } icon={ faSortDown }/>
+
+                        { this.state.showHints &&
+                        <InputHints hints={ filteredHints } removeHint={ this.removeHint }
+                                    getHintContentElement={ this.getHintContentElement }
+                                    hintClickHandler={ this.hintClickHandler }/>
+                        }
+
+                    </Fragment> }
+                </UserInputContainer>
+
+                { ( this.state.validationMessage && this.state.showValidation ) &&
+                <ValidationErrorContainer>
+                    { errorsTranslations[ this.state.validationMessage ] }
+                </ValidationErrorContainer> }
+            </FormGroup>
+        )
+
     }
 }

@@ -1,129 +1,43 @@
-import React, { ChangeEvent } from 'react'
+/* React */
+import React from 'react'
 
-import styled, { CSSObject, StyledComponent } from 'styled-components'
-
+/* Element */
+import * as IShardsReact from 'shards-react'
+import * as FormElements from 'App/Theme/FormElement'
+import GeneratorInput from 'Container/GeneratorInput'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
+/* Language */
+import languageService from 'Service/Language'
+
+/* Interface */
+import { IRecursivePartial, ITranslationConfig, ITranslationObj } from 'Global'
+import { IGeneratorField, IHintConfig, IHintsHistory, IUTMOptionConfig } from 'UtmGenerator'
+
+/* Asset */
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
 
-import * as IShardsReact from 'shards-react'
-import languageService from 'Service/Language'
-import { theme } from 'Theme'
-import { IRecursivePartial, ITranslationConfig, ITranslationObj } from 'Global'
-import { IErrorLabel, IGeneratorField, IUTMOptionConfig } from 'UtmGenerator'
-
-import GeneratorInput from 'Container/GeneratorInput'
-
-type IFieldValidation = {
-    [inputName in IGeneratorField]: IErrorLabel
-}
+/* Tool */
+import { getCookie, setCookie } from 'Tool/Cookie'
 
 interface IState {
     translations: IRecursivePartial<ITranslationObj<string>>
-    outputURL: string
-    fieldsValidation: IFieldValidation
+    generatedUrl?: string
+    savedHints?: IHintsHistory
     formOptions: {
         forceLowerCaseOutput: boolean
     }
+    inputValues: {
+        [inputName in IGeneratorField]?: string
+    }
 }
 
-interface IProps {
+export default class UTMGenerator extends React.Component<{}, IState> {
+    /* Vars */
 
-}
-
-const UTMForm = styled(IShardsReact.Form)({
-    padding: 32,
-    boxShadow: '0 0 16px -4px #00000040',
-    borderRadius: '16px',
-}) as StyledComponent<typeof IShardsReact.Form, any, any> /* Prevent autocomplete attribute warning */
-
-const OutputFormGroup = styled(IShardsReact.FormGroup)({
-    display: 'flex',
-})
-
-const UTMResetButton = styled(IShardsReact.Button)({
-    backgroundImage: 'linear-gradient(    rgb(36,58,164) 0%,    rgb(36,58,134) 51%,    rgb(36, 58, 114) 100%)',
-    borderWidth: 0,
-    '&:hover': {
-        backgroundImage: 'unset',
-        backgroundColor: theme.cnvBlue,
-    },
-})
-
-const CopyOutputBtn = styled(IShardsReact.Button)({
-    padding: '.75rem 0.9rem',
-    marginLeft: 16,
-    color: '#fff',
-    backgroundImage: 'linear-gradient(rgb(253, 102, 33) 0%, rgb(253, 90, 31) 51%, rgb(253, 78, 30) 100%)',
-    borderWidth: 0,
-    ':hover': {
-        color: '#fff !important',
-        backgroundImage: 'unset',
-        backgroundColor: theme.cnvOrange,
-    },
-    ':active': {
-        color: '#fff !important',
-    },
-    'svg': {
-        marginLeft: '.5em',
-    },
-})
-
-const UTMLabel = styled.label((props: { required?: boolean }): CSSObject => ( {
-    '&::after': {
-        content: props.required ? '\'*\'' : 'unset',
-        color: theme.red,
-        'margin-left': '.25em',
-    },
-} ))
-
-const UTMCompileOptionContainer = styled(IShardsReact.FormGroup)((): CSSObject => ( {
-    alignItems: 'center',
-    display: 'flex',
-    flexWrap: 'wrap',
-    [ UTMResetButton ]: {
-        marginLeft: 'auto',
-    },
-} ))
-
-const OutputInput = styled(IShardsReact.FormTextarea)({
-    cursor: 'text !important',
-})
-
-const CopyHelperInput = styled.input({
-    height: 1,
-    width: 1,
-    borderWidth: 0,
-    padding: 0,
-    position: 'absolute',
-    opacity: 0,
-    pointerEvents: 'none',
-})
-
-const FormUtils = styled.div({
-    marginLeft: 'auto',
-    'button': {
-        transitionDuration: '0s',
-    },
-    [ `@media (max-width: ${ theme.mdBreakpoint }px)` ]: {
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'row-reverse',
-        justifyContent: 'flex-end',
-        marginTop: 16,
-        [ UTMResetButton ]: {
-            marginLeft: 16,
-        },
-
-        [ CopyOutputBtn ]: {
-            marginLeft: 0,
-        },
-    },
-})
-
-export default class UTMGenerator extends React.Component<IProps, IState> {
-    private readonly copyURLRef: React.RefObject<HTMLInputElement> = React.createRef()
+    private readonly historyCookieName = 'hintsHistory'
     private readonly outputRef: React.RefObject<HTMLInputElement> = React.createRef()
-    private readonly generatorOptionsConfiguration: IUTMOptionConfig[] = [
+    private readonly generatorOptionsConfiguration: IUTMOptionConfig<string>[] = [
         {
             name: 'url',
             required: true,
@@ -135,7 +49,7 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
         {
             name: 'source',
             required: true,
-            hints: ['google.pl', 'facebook.com', 'instagram.com', 'twitter.com' ]
+            hints: [ 'google.pl', 'facebook.com', 'instagram.com', 'twitter.com' ],
         },
         {
             name: 'medium',
@@ -161,7 +75,16 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
         },
     }
 
+    public state = {
+        translations: languageService.getPartialTranslation(this.translationConfig),
+        savedHints: getCookie(this.historyCookieName) ?? {},
+        formOptions: {
+            forceLowerCaseOutput: false,
+        },
+        inputValues: {},
+    } as IState
 
+    /* Hooks */
     public componentDidMount() {
         languageService.store.subscribe((): void => {
             this.setState({
@@ -170,35 +93,81 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
         })
     }
 
-    public state = {
-        translations: languageService.getPartialTranslation(this.translationConfig),
-        fieldsValidation: {} as IFieldValidation,
-        outputURL: '',
-        formOptions: {
-            forceLowerCaseOutput: false,
-        },
+    /* Listener handlers */
+    private onFormReset = () => {
+        this.setState((prevState) => {
+            const stateCopy = { ...prevState }
+
+            delete stateCopy.generatedUrl
+            stateCopy.formOptions.forceLowerCaseOutput = false
+
+            return stateCopy
+        })
     }
 
+    private onFormCopy = (event: React.ClipboardEvent) => {
+        if (this.outputRef.current === event.target) {
+            this.updateHintsHistory(true)
+        }
+    }
+
+    private onLowercaseSwitchClick = (): void => {
+        this.setState((prevState) => ( {
+            formOptions: {
+                forceLowerCaseOutput: !prevState.formOptions.forceLowerCaseOutput,
+            },
+        } ))
+
+        this.updateOutputURL()
+    }
+
+    private onCopyBtnClick = () => {
+        const outputElement = this.outputRef?.current
+
+        if (outputElement) {
+            outputElement.select()
+            document.execCommand('copy')
+            window.getSelection()?.removeAllRanges()
+        }
+
+    }
+
+    private onInputChange = async (inputName: IGeneratorField, inputValue: string | false) => {
+        await this.setState((prevState) => {
+            const stateCopy = { ...prevState }
+
+            if (inputValue === false) {
+                delete stateCopy.inputValues[ inputName ]
+            } else {
+                stateCopy.inputValues[ inputName ] = inputValue
+            }
+
+            return stateCopy
+        })
+
+        this.updateOutputURL()
+    }
+
+    /* Data updaters */
     private updateOutputURL = (): void => {
-        const root = this.outputRef.current?.form
+        let generatedURL = ''
+        let isValid = true
 
-        if (root) {
-            let generatedURL = ''
+        /* Only valid values are added to state.inputValues so i need only to check if all the required ones are present */
+        for (const inputConfig of this.generatorOptionsConfiguration) {
+            if (inputConfig.required && !this.state.inputValues[ inputConfig.name ]) {
+                isValid = false
+                break
+            }
+        }
 
-            if (root.checkValidity()) {
-                const formData = new FormData(root)
-                const urlValue = formData.get('url') as string
-                let urlInput = ''
+        /* Build url */
+        if (isValid) {
+            const urlFieldValue = this.state.inputValues[ 'url' ]
 
-                // Remove url data from formData (it is not needed any more + it makes mess in params add loop)
-                formData.delete('url')
-
-                // Add protocol if missing
-                if (urlValue) {
-                    urlInput += ( !/^http/.test(urlValue) ? 'http://' : '' ) + urlValue
-                }
-
-                const urlObject = new URL(urlInput)
+            if (urlFieldValue) {
+                /* Generate url object */
+                const urlObject = new URL(( !/^http/.test(urlFieldValue) ? 'http://' : '' ) + urlFieldValue)
                 generatedURL += urlObject.origin
 
                 if (urlObject.pathname !== '/') {
@@ -207,85 +176,152 @@ export default class UTMGenerator extends React.Component<IProps, IState> {
 
                 generatedURL += urlObject.search
 
-                //Add params
-                for (const [ inputName, inputValue ] of formData.entries()) {
-                    if (inputValue) {
+                /* Add form params to url */
+                for (const [ inputName, inputValue ] of Object.entries(this.state.inputValues)) {
+                    if (inputName !== 'url') {
                         generatedURL += `${ ( /\?/.test(generatedURL) ? '&' : '?' ) }utm_${ inputName }=${ inputValue }`
                     }
                 }
 
                 generatedURL += urlObject.hash
+
+
+                if (this.state.formOptions.forceLowerCaseOutput) {
+                    generatedURL = generatedURL.toLowerCase()
+                }
+            }
+        }
+
+        /* Output update */
+        this.setState((prevState) => {
+            const prevStateCopy = { ...prevState }
+
+            if (isValid) {
+                prevStateCopy.generatedUrl = generatedURL
+            } else {
+                delete prevStateCopy.generatedUrl
             }
 
-            this.setState((prevState) => ( {
-                outputURL: prevState.formOptions.forceLowerCaseOutput ? generatedURL.toLowerCase() : generatedURL,
+            return prevStateCopy
+        })
+    }
+
+    private updateHintsHistory = (addUserInputsToHistory = false) => {
+        const cookiesHistory = ( getCookie(this.historyCookieName) ?? {} ) as IHintsHistory
+
+        if (addUserInputsToHistory) {
+            /* Iterate all form input */
+            for (const [ inputName, inputValue ] of Object.entries(this.state.inputValues)) {
+
+                if (inputValue && inputName !== 'url') {
+                    /* Get input hints space */
+                    let inputHistoryArray = cookiesHistory[ inputName as IGeneratorField ]
+
+
+                    const inputConfigHints = this.getInputBaseConfig(inputName as IGeneratorField)?.hints ?? []
+
+                    if (!inputHistoryArray) {
+                        cookiesHistory[ inputName as IGeneratorField ] = []
+                        inputHistoryArray = cookiesHistory[ inputName as IGeneratorField ]
+                    }
+
+                    /* Add hint */
+                    if (inputHistoryArray && ![ ...inputConfigHints, ...inputHistoryArray ].find(savedHint => savedHint === inputValue)) {
+                        inputHistoryArray.push(inputValue)
+
+                        while (inputHistoryArray.length > 10) {
+                            inputHistoryArray.shift()
+                        }
+                    } else if (!inputHistoryArray?.length) { /* Remove field if empty */
+                        delete cookiesHistory[ inputName as IGeneratorField ]
+                    }
+
+                }
+            }
+        }
+
+        setCookie(this.historyCookieName, cookiesHistory as {})
+        this.setState({
+            savedHints: cookiesHistory,
+        })
+    }
+
+    /* Other */
+    private getParsedHints = (inputName: IGeneratorField): IHintConfig[] => {
+        const defaultHints = this.getInputBaseConfig(inputName)?.hints
+        let rawHints: IHintConfig[] = []
+        const parsedHints: IHintConfig[] = []
+
+        /* Build raw hints */
+        if (defaultHints) {
+            rawHints = defaultHints.map((hintValue) => ( {
+                value: hintValue,
+                removable: false,
+            } )) as IHintConfig[]
+        }
+
+
+        if (this.state.savedHints) {
+            const currentSavedHints = this.state.savedHints[ inputName ]?.map((hintValue): IHintConfig => ( {
+                value: hintValue,
+                removable: true,
             } ))
+
+            if (currentSavedHints) {
+                rawHints = [ ...rawHints, ...currentSavedHints ]
+            }
         }
 
-    }
-
-    private lowercaseSwitchHandler = (event: ChangeEvent<HTMLInputElement>): void => {
-        this.setState((prevState) => ( {
-            formOptions: {
-                forceLowerCaseOutput: !prevState.formOptions.forceLowerCaseOutput,
-            },
-        } ))
-
-        if (event.target && ( event.target as HTMLElement ).nodeName.toLowerCase() === 'label') { // label click does not trigger form change event
-            this.updateOutputURL()
+        /* Build config */
+        for (const rawHint of new Set(rawHints).values()) {
+            parsedHints.push({
+                removable: !defaultHints?.find((defaultHint) => defaultHint === rawHint.value),
+                value: rawHint.value,
+            })
         }
+
+        return parsedHints
     }
 
-    private copyOutputToClipboard = () => {
-        if (this.copyURLRef.current) {
-            this.copyURLRef.current.select()
-            document.execCommand('copy')
-        }
-    }
-
-    private resetFormHandler = () => {
-        this.setState(() => ( {
-            outputURL: '',
-            formOptions: {
-                forceLowerCaseOutput: false,
-            },
-        } ))
-    }
+    private getInputBaseConfig = (inputName: IGeneratorField): IUTMOptionConfig<string> | undefined => this.generatorOptionsConfiguration.find((config) => config.name === inputName)
 
     public render() {
         return (
-            <UTMForm onReset={ this.resetFormHandler } onChange={ this.updateOutputURL } autoComplete="off">
+
+            <FormElements.UTMForm onReset={ this.onFormReset } autoComplete="off" onCopy={ this.onFormCopy }>
                 {
-                    this.generatorOptionsConfiguration.map((optionConfig, index): JSX.Element =>
-                        <GeneratorInput { ...optionConfig } key={ index + optionConfig.name }/>)
+                    this.generatorOptionsConfiguration.map((optionConfig, index): JSX.Element => (
+                        <GeneratorInput { ...optionConfig } hints={ this.getParsedHints(optionConfig.name) }
+                                           key={ index + '-' + optionConfig.name }
+                                           updateHints={ this.updateHintsHistory }
+                                           change={ this.onInputChange }/>
+                    ))
                 }
 
                 <hr/>
 
-                <OutputFormGroup>
-                    <CopyHelperInput value={ this.state.outputURL } ref={ this.copyURLRef } readOnly/>
-                    <OutputInput value={ this.state.outputURL } innerRef={ this.outputRef } readOnly disabled required
-                                 id="utm-output"
-                                 placeholder={ this.state.translations.generatorForm?.outputPlaceholder }/>
-                </OutputFormGroup>
+                <FormElements.OutputInput value={ this.state.generatedUrl } innerRef={ this.outputRef } readOnly
+                                          id="utm-output"
+                                          placeholder={ this.state.translations.generatorForm?.outputPlaceholder }/>
 
-                <UTMCompileOptionContainer>
+                <FormElements.UTMCompileOptionContainer>
                     <IShardsReact.FormCheckbox checked={ this.state.formOptions.forceLowerCaseOutput }
-                                               onChange={ this.lowercaseSwitchHandler } id="utm-lower-case" toggle
+                                               onChange={ this.onLowercaseSwitchClick } id="utm-lower-case" toggle
                                                small/>
-                    <UTMLabel
-                        htmlFor="utm-lower-case">{ this.state.translations.generatorForm?.lowercaseSwitch }</UTMLabel>
+                    <FormElements.UTMLabel
+                        htmlFor="utm-lower-case">{ this.state.translations.generatorForm?.lowercaseSwitch }</FormElements.UTMLabel>
 
-                    <FormUtils>
-                        <UTMResetButton squared
-                                        type="reset">{ this.state.translations.generatorForm?.reset }</UTMResetButton>
-                        <CopyOutputBtn squared type="button" theme="warning" onClick={ this.copyOutputToClipboard }>
+                    <FormElements.FormUtils>
+                        <FormElements.UTMResetButton squared
+                                                     type="reset">{ this.state.translations.generatorForm?.reset }</FormElements.UTMResetButton>
+                        <FormElements.CopyOutputBtn squared type="button" theme="warning"
+                                                    onClick={ this.onCopyBtnClick }>
                             { this.state.translations.generatorForm?.copy }
                             <FontAwesomeIcon icon={ faCopy }/>
-                        </CopyOutputBtn>
-                    </FormUtils>
-                </UTMCompileOptionContainer>
-            </UTMForm>
+                        </FormElements.CopyOutputBtn>
+                    </FormElements.FormUtils>
+                </FormElements.UTMCompileOptionContainer>
+            </FormElements.UTMForm>
         )
     }
 }

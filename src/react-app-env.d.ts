@@ -240,15 +240,25 @@ declare module 'UtmGenerator' {
     /* Translation error labels */
     type IErrorLabel = 'empty' | 'pattern'
 
-    interface IUTMOptionConfig {
+    type IHintConfig = { value: string, removable: boolean }
+
+    type IHintsHistory = {
+        [inputName in IGeneratorField]?: string[]
+    }
+
+    interface IUTMOptionConfig<H> {
         name: IGeneratorField
         required?: boolean
-        hints?: string[]
+        hints?: H[]
+        change?: any
     }
 }
 
 declare module 'Global' {
     import UtmGenerator from 'UtmGenerator'
+
+    type IStringifyBool = 'true' | 'false';
+    type IGenericObj<T> = { [ key: string ]: T }
 
     type IRecursivePartial<T> = {
         [P in keyof T]?: IRecursivePartial<T[P]>
@@ -257,8 +267,6 @@ declare module 'Global' {
     type ITranslationConfig<T> = {
         [P in keyof T]?: ITranslationConfig<T[P]> | boolean
     };
-
-    type IGenericObj<T> = { [ key: string ]: T }
 
     interface ITranslationObj<T> {
         language: T

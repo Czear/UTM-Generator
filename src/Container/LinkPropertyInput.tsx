@@ -12,7 +12,7 @@ import {
     UserInputContainer,
     UTMLabel,
     ValidationErrorContainer,
-} from 'App/Theme/FormElement'
+} from 'Theme/FormElement'
 
 /* Language */
 import languageService from 'Service/Language'

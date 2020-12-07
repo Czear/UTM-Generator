@@ -10,7 +10,7 @@ import styled from 'styled-components'
 import UTMGenerator from 'Container/UTMGenerator'
 import Header from 'Container/Header'
 
-import { theme } from 'Theme'
+import ThemeConfig from 'Theme/Layout'
 
 const Root = styled.div({
     display: 'flex',
@@ -24,7 +24,7 @@ const Container = styled.main({
     '@media (min-width: 1200px)': {
         maxWidth: 960,
     },
-    [ `@media (max-width: ${ theme.mdBreakpoint }px)` ]: {
+    [ `@media (max-width: ${ ThemeConfig.smBreakpoint }px)` ]: {
         margin: '32px auto',
     },
 })

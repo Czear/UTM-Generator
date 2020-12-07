@@ -11,7 +11,7 @@ interface ILanguageAction {
 
 class LanguageService {
     public readonly languageCookieName = 'translation-language'
-    public readonly defaultLanguageValue: ILanguage = 'pl'
+    public readonly defaultLanguageValue: ILanguage = 'en'
 
     constructor() {
         if (!getCookie(this.languageCookieName)) {

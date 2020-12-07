@@ -2,9 +2,9 @@
 import React from 'react'
 
 /* Element */
-import * as IShardsReact from 'shards-react'
-import * as FormElements from 'App/Theme/FormElement'
 import LinkPropertyInput from 'Container/LinkPropertyInput'
+import { FormCheckbox } from 'shards-react'
+import { UTMForm, OutputInput, UTMCompileOptionContainer, UTMLabel, FormUtils, UTMResetButton, CopyOutputBtn } from 'Theme/FormElement'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 /* Language */
@@ -288,7 +288,7 @@ export default class UTMGenerator extends React.Component<{}, IState> {
     public render() {
         return (
 
-            <FormElements.UTMForm onReset={ this.onFormReset } autoComplete="off" onCopy={ this.onFormCopy }>
+            <UTMForm onReset={ this.onFormReset } autoComplete="off" onCopy={ this.onFormCopy }>
                 {
                     this.generatorOptionsConfiguration.map((optionConfig, index): JSX.Element => (
                         <LinkPropertyInput { ...optionConfig } hints={ this.getParsedHints(optionConfig.name) }
@@ -300,28 +300,27 @@ export default class UTMGenerator extends React.Component<{}, IState> {
 
                 <hr/>
 
-                <FormElements.OutputInput value={ this.state.generatedUrl } innerRef={ this.outputRef } readOnly
-                                          id="utm-output"
-                                          placeholder={ this.state.translations.generatorForm?.outputPlaceholder }/>
+                <OutputInput value={ this.state.generatedUrl } innerRef={ this.outputRef } readOnly
+                             id="utm-output"
+                             placeholder={ this.state.translations.generatorForm?.outputPlaceholder }/>
 
-                <FormElements.UTMCompileOptionContainer>
-                    <IShardsReact.FormCheckbox checked={ this.state.formOptions.forceLowerCaseOutput }
-                                               onChange={ this.onLowercaseSwitchClick } id="utm-lower-case" toggle
-                                               small/>
-                    <FormElements.UTMLabel
-                        htmlFor="utm-lower-case">{ this.state.translations.generatorForm?.lowercaseSwitch }</FormElements.UTMLabel>
-
-                    <FormElements.FormUtils>
-                        <FormElements.UTMResetButton squared
-                                                     type="reset">{ this.state.translations.generatorForm?.reset }</FormElements.UTMResetButton>
-                        <FormElements.CopyOutputBtn squared type="button" theme="warning"
-                                                    onClick={ this.onCopyBtnClick }>
+                <UTMCompileOptionContainer>
+                    <FormCheckbox checked={ this.state.formOptions.forceLowerCaseOutput }
+                                  onChange={ this.onLowercaseSwitchClick } id="utm-lower-case" toggle
+                                  small/>
+                    <UTMLabel
+                        htmlFor="utm-lower-case">{ this.state.translations.generatorForm?.lowercaseSwitch }</UTMLabel>
+                    <FormUtils>
+                        <UTMResetButton squared
+                                        type="reset">{ this.state.translations.generatorForm?.reset }</UTMResetButton>
+                        <CopyOutputBtn squared type="button" theme="warning"
+                                       onClick={ this.onCopyBtnClick }>
                             { this.state.translations.generatorForm?.copy }
                             <FontAwesomeIcon icon={ faCopy }/>
-                        </FormElements.CopyOutputBtn>
-                    </FormElements.FormUtils>
-                </FormElements.UTMCompileOptionContainer>
-            </FormElements.UTMForm>
+                        </CopyOutputBtn>
+                    </FormUtils>
+                </UTMCompileOptionContainer>
+            </UTMForm>
         )
     }
 }

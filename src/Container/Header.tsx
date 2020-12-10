@@ -162,7 +162,7 @@ export default class Header extends React.Component<{}, IState> {
 
     private updateLanguage = (languageValue: 'pl' | 'en'): void => {
         languageService.store.dispatch({
-            type: 'language-change',
+            type: 'LANG_CHANGE',
             value: languageValue,
         })
     }

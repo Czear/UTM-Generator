@@ -5,7 +5,7 @@ import { IGenericObj, IRecursivePartial, ITranslationConfig, ITranslationObj } f
 type ILanguage = 'pl' | 'en'
 
 interface ILanguageAction {
-    type: string
+    type: 'LANG_CHANGE'
     value: ILanguage
 }
 
@@ -19,38 +19,34 @@ class LanguageService {
         }
     }
 
-    private getTranslationObj = (type: ILanguage): ITranslationObj<string> => require(`Translation/${ type }.json`)
-
-    private getSavedLanguageType = (): ILanguage => {
-        let languageValue = getCookie(this.languageCookieName) as ILanguage
-
-        if (!languageValue) {
-            languageValue = this.defaultLanguageValue
-        }
-
-        return languageValue
+    private get savedLanguageType(): ILanguage {
+        return getCookie(this.languageCookieName) as ILanguage ?? this.defaultLanguageValue
     }
 
-    public store = createStore((state = {}, action: ILanguageAction): ITranslationObj<string> => {
-        if (/redux\/init/i.test(action.type)) {
-            state = this.getTranslationObj(this.getSavedLanguageType())
-        } else if (action.type === 'language-change') {
-            setCookie(this.languageCookieName, action.value)
-            state = this.getTranslationObj(action.value as ILanguage)
-        }
+    private getTranslationObj = (type: ILanguage): ITranslationObj<string> => require(`Translation/${ type }.json`)
 
-        return state as ITranslationObj<string>
+    public store = createStore((state: Object = {}, action: ILanguageAction): ITranslationObj<string> => {
+        if (/@@redux\/init/i.test(action.type)) {
+            return this.getTranslationObj(this.savedLanguageType)
+
+        } else if (action.type === 'LANG_CHANGE') {
+            setCookie(this.languageCookieName, action.value)
+            return this.getTranslationObj(action.value as ILanguage)
+
+        } else {
+            throw new Error('Undefined language redux action')
+        }
     })
 
-    public getPartialTranslation = (config: ITranslationConfig<ITranslationObj<boolean>>): IRecursivePartial<ITranslationObj<string>>  => {
-        const interpretConfigObj = (configObj: IRecursivePartial<ITranslationObj<boolean>>, translationObj: IRecursivePartial<ITranslationObj<string>>):  IRecursivePartial<ITranslationObj<string>>  => {
+    public getPartialTranslation = (config: ITranslationConfig<ITranslationObj<boolean>>): IRecursivePartial<ITranslationObj<string>> => {
+        const interpretConfigObj = (configObj: IRecursivePartial<ITranslationObj<boolean>>, translationObj: IRecursivePartial<ITranslationObj<string>>): IRecursivePartial<ITranslationObj<string>> => {
             let outputObj: IRecursivePartial<ITranslationObj<string>> = {}
 
             for (const [ key, value ] of Object.entries(configObj)) {
                 if (typeof value === 'boolean' && value) {
+                    //@ts-ignore Recursive keyof needed
+                    outputObj[ key ] = translationObj[ key as keyof ITranslationObj<string> ]
 
-                    //@ts-ignore // idk
-                    outputObj[ key as keyof ITranslationObj<string> ] = translationObj[ key as keyof ITranslationObj<string> ]
                 } else if (typeof value === 'object') {
                     const interpretedData = interpretConfigObj(value as IRecursivePartial<ITranslationObj<boolean>>, translationObj[ key as keyof ITranslationObj<string> ] as IRecursivePartial<ITranslationObj<string>>)
 
